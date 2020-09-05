@@ -58,19 +58,21 @@ public class EndSystemControl implements ControlAlgorithm {
 	}
 	
 	public void forward_packet(int now, Packet p, int iface) {
-		if ( iface == LOCAL ) { // locally sent packet
+		// TODO: should we always use Packet copy = p.getCopy() instead?
+		// the semantics would be to always send a packet copy and
+		// not the object packet to be sent.
+		
+		if ( iface == LOCAL && links[0].isUp() ) { // locally sent packet
 			nodeObj.send(p,0);
 			trace(now, "forwarded a locally sent packet");
 			return;
 		} 
-		if ( iface == 0 && p.getDestination() != nodeId ) {
-			trace(now,"received a packet for another node - ignore it");
+		if ( iface == LOCAL && ! links[0].isUp() ) {
 			nodeObj.send(p,UNKNOWN);
+			trace(now, "network interface is down");
 			return;
 		}
-		// just to help debugging purposes
-		tracingOn = true; 
-		trace(now,"this should not happen");
+		// allows the node to count dropped packets
 		nodeObj.send(p,UNKNOWN);
 	}
 

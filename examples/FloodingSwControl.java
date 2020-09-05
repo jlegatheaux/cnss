@@ -52,12 +52,12 @@ public class FloodingSwControl implements ControlAlgorithm {
 	
 	public void forward_packet(int now, Packet p, int iface) {
 		int copiesSent = 0;
-		// TODO: should we use Packet copy = p.getCopy() here instead ?
+		// TODO: should we always use Packet copy = p.getCopy() instead?
 		// the semantics would be to always send a packet copy and
-		// not the object packet sent.
+		// not the object packet to be sent.
 	
 		for (int i=0; i<links.length; i++) {
-			if ( i != iface ) {
+			if ( i != iface && links[i].isUp() ) {
 				if ( copiesSent == 0 ) {
 					nodeObj.send(p,i);
 					copiesSent++;
