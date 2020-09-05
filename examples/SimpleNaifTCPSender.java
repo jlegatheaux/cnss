@@ -10,7 +10,7 @@ public class SimpleNaifTCPSender implements ApplicationAlgorithm {
 	private Node nodeObj;
 	private int nodeId;
 	private String[] args;
-	private String name = "simple naif TCP sender";
+	private String name = "simple naif TCP sender - ";
 	private boolean logOn = true;
 
 	int counter = 0;

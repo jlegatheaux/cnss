@@ -15,7 +15,7 @@ public class EndSystemControl implements ControlAlgorithm {
 	private GlobalParameters parameters;
 	private Link[] links;
 	private int numInterfaces;
-	private String name="end system";
+	private String name="end system - ";
 	private boolean tracingOn = false;
 
 	public EndSystemControl() {
@@ -58,13 +58,20 @@ public class EndSystemControl implements ControlAlgorithm {
 	}
 	
 	public void forward_packet(int now, Packet p, int iface) {
-		if ( iface != LOCAL ) {
-			tracingOn = true;
-			trace(now,"end system sending a non locally sent packet");
-			System.exit(-1);
+		if ( iface == LOCAL ) { // locally sent packet
+			nodeObj.send(p,0);
+			trace(now, "forwarded a locally sent packet");
+			return;
+		} 
+		if ( iface == 0 && p.getDestination() != nodeId ) {
+			trace(now,"received a packet for another node - ignore it");
+			nodeObj.send(p,UNKNOWN);
+			return;
 		}
-		nodeObj.send(p,0);
-		trace(now, "forwarded packet");
+		// just to help debugging purposes
+		tracingOn = true; 
+		trace(now,"this should not happen");
+		nodeObj.send(p,UNKNOWN);
 	}
 
 	public void showControlState(int now) {

@@ -367,14 +367,13 @@ public class Node {
 			System.err.println("control_send: no packet to send");
 			System.exit(-1);
 		}
-		if (iface == LOCAL || p.getDestination() == node_id || p.getDestination() == Packet.ONEHOP) {
+		if (iface == LOCAL || p.getDestination() == node_id) {
 			// local delivery
 			outputEvents.add(new Event(EventType.DELIVERPACKET, now + 1, 0, null, p, node_id, LOCAL));
 			counter[SENT]++;
 		} else if (iface == UNKNOWN || iface >= num_interfaces) {
 			// drop the packet since it is impossible to send it
 			counter[DROP]++;
-			System.err.println("control_send: do not know how to forward a packet to " + p.getDestination());
 		} else {
 			links[iface].enqueuePacket(node_id, p); // the link side is relative to the node calling it
 			counter[SENT]++;

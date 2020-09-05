@@ -3,9 +3,9 @@
 parameter stop 300000   # 300 seconds = 5 minutes
 
 
-node 0 1 rcss.simulator.FloodingSwControl rcss.examples.SimpleNaifSwSender 100
-node 1 2 rcss.simulator.FloodingSwControl rcss.examples.SimpleSwitch
-node 2 1 rcss.simulator.FloodingSwControl rcss.examples.SimpleNaifSwReceiver
+node 0 1 cnss.examples.EndSystemControl cnss.examples.SimpleNaifSwSender 100
+node 1 2 cnss.examples.FloodingSwControl cnss.examples.EmptyApp
+node 2 1 cnss.examples.EndSystemControl cnss.examples.SimpleNaifSwReceiver
 
 Link 0.0 1.0 1000000 50 0 0
 Link 1.1 2.0 1000000 50 0 0

@@ -11,7 +11,7 @@ public class SimpleTest implements ApplicationAlgorithm {
 	private int nodeId;
 	private String[] args;
 
-	private String name = "simple test";
+	private String name = "simple test - ";
 	boolean logingOn = true;
 
 	public SimpleTest() {
@@ -21,9 +21,13 @@ public class SimpleTest implements ApplicationAlgorithm {
 		nodeId = node_id;
 		nodeObj = mynode;
 		this.args = args;
-		log(0, "starting");
 
+		if (nodeId == 0) {
+			log(0, "starting");
+			return 0;
+		}
 		if (nodeId == 1) { // sender to 2
+			log(0, "starting");
 			DataPacket p = nodeObj.createDataPacket(2, new byte[1000]);
 			log(0, "sent 2 packets of size " + p.getSize());
 			nodeObj.send(p);
@@ -33,11 +37,13 @@ public class SimpleTest implements ApplicationAlgorithm {
 		}
 
 		if (nodeId == 2) { // receiver from 1
+			log(0, "starting");
 			nodeObj.set_timeout(200);
 			return 0;
 		}
 
 		if (nodeId == 3) { // sender to 4
+			log(0, "starting");
 			DataPacket p = nodeObj.createDataPacket(4, new byte[10000]);
 			log(0, "sent 2 packets of size " + p.getSize());
 			nodeObj.send(p);
@@ -46,10 +52,11 @@ public class SimpleTest implements ApplicationAlgorithm {
 		}
 
 		if (nodeId == 4) {
+			log(0, "starting");
 			nodeObj.set_timeout(450);
 			return 500;
 		}
-
+		
 		return 0;
 	}
 

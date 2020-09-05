@@ -3,25 +3,18 @@
 parameter stop 3000   # 3 seconds
 
 
-node 0 4 rcss.simulator.FloodingSwControl rcss.examples.SimpleSwitch hello world
-node 1 1 rcss.simulator.FloodingSwControl rcss.examples.SimpleTest
-node 2 1 rcss.simulator.FloodingSwControl rcss.examples.SimpleTest
-node 3 1 rcss.simulator.FloodingSwControl rcss.examples.SimpleTest
-node 4 1 rcss.simulator.FloodingSwControl rcss.examples.SimpleTest 
+node 0 4 cnss.examples.FloodingSwControl cnss.examples.EmptyApp hello world
+node 1 1 cnss.examples.EndSystemControl cnss.examples.SimpleTest
+node 2 1 cnss.examples.EndSystemControl cnss.examples.SimpleTest
+node 3 1 cnss.examples.EndSystemControl cnss.examples.SimpleTest
+node 4 1 cnss.examples.EndSystemControl cnss.examples.SimpleTest 
 
-Link 0.0 1.0 1000000 50 0 0
-Link 0.1 2.0 1000000 50 0 0
-Link 0.2 3.0 1000000 50 0 0
-Link 0.3 4.0 1000000 50 0 0
-
-
-# param app.clock-period 0
-# param app.timeout-period 0
-# param control.clock-period 0 
-# param control.timeout-period 0
+Link 0.0 1.0 1000000 50 0.0 0.0
+Link 0.1 2.0 1000000 50 0.0 0.0
+Link 0.2 3.0 1000000 50 0.0 0.0
+Link 0.3 4.0 1000000 50 0.0 0.0
 
 dumpappstate 2900 all
-dumpcontrolstate 2900 all
 dumppacketstats 2900 all
 
 

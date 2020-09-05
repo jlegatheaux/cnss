@@ -20,6 +20,12 @@ package cnss.simulator;
  * This <code>main_loop</code> ends when there are no more global events to process
  * or the end of simulation time is reached.
  * 
+ * TODO:
+ * 
+ * The config file may contain incoherences which are only detected during
+ * execution time. Also, config file parameters must be separated by exactly
+ * one space character. If not, parameters are nor well recognized.
+ * 
  * @author  System's team of the Department of Informatics of FCT/UNL based on a
  * @author  preliminary version by Adam Greenhalgh of UCL
  * @version 1.0, September 2021                                                            
@@ -123,9 +129,6 @@ public class Simulator {
 			nodes[links[i].getNode(1)].addLinks(links[i]);
 			nodes[links[i].getNode(2)].addLinks(links[i]);
 		}
-
-		// TODO: it would be helpful if a configuration coherence
-		// test would be available
 
 	}
 
@@ -349,7 +352,7 @@ public class Simulator {
 	 * transmission of packets <code>process_packets</code> by all links.
 	 */
 	public void main_loop() {
-		System.out.println("\nsimulation starts - processing step of time = 0\n");
+		System.out.println("\nsimulation starts - first processing step with clock = 0\n");
 		// start all nodes
 		// nodes are initialized at time step 0
 		nextEventId = 0;
@@ -385,7 +388,7 @@ public class Simulator {
 				enqueue_packets_to_deliver(links[i], now);
 			}
 		}
-		System.out.println("\nsimulation ended - processing step of time = " + now + "\n");
+		System.out.println("\nsimulation ended - last processing step with clock = " + now + "\n");
 		check_completed();
 	}
 

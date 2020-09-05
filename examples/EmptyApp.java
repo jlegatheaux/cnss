@@ -13,7 +13,7 @@ public class EmptyApp implements ApplicationAlgorithm {
 	private String[] args;
 	private int clockPeriod = 0;
 	private int timeoutPeriod = 0;
-	private String name = "simple switch";
+	private String name = "empty app - ";
 	private boolean logOn = true;
 
 	public EmptyApp() {

@@ -27,11 +27,16 @@ public class SimpleSender implements ApplicationAlgorithm {
 		DataPacket p = nodeObj.createDataPacket(2, message);
 		log(0, "sent packet " + p);
 		nodeObj.send(p);
+		
+		DataPacket p1 = nodeObj.createDataPacket(3, new byte[10000]);
+		nodeObj.send(p1);
+		log(0, "sent big packet " + p1);
+		
+		message = ("hello I am the " + name + " sending a third packet").getBytes();
+		p = nodeObj.createDataPacket(2, message);
 		log(0, "sent packet " + p);
 		nodeObj.send(p);
-		p = nodeObj.createDataPacket(3, new byte[1000]);
-		nodeObj.send(p);
-		log(0, "sent big packet " + p);
+
 		return 0;
 	}
 
