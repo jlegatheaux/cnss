@@ -1,0 +1,20 @@
+# tests of the naif stop & wait scenarios
+
+parameter stop 3000   # 50 seconds
+
+
+node 0 1 rcss.simulator.FloodingSwControl rcss.examples.SimpleNaifTCPSender 100
+node 1 2 rcss.simulator.FloodingSwControl rcss.examples.SimpleSwitch
+node 2 1 rcss.simulator.FloodingSwControl rcss.examples.SimpleNaifTCPReceiver 100
+
+Link 0.0 1.0 1000000 50 0 0
+Link 1.1 2.0 1000000 50 0 0
+
+dumpappstate 30000 all
+dumppacketstats 30000 all
+
+
+
+
+
+

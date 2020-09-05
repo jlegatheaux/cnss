@@ -1,0 +1,21 @@
+# tests of the bulk transfers scenarios
+
+parameter stop 60000   # 60 seconds = 1 minute
+
+
+node 0 1 rcss.simulator.FloodingSwControl rcss.examples.SimpleBulkSender 100
+node 1 2 rcss.simulator.FloodingSwControl rcss.examples.SimpleSwitch
+node 2 1 rcss.simulator.FloodingSwControl rcss.examples.SimpleBulkReceiver
+
+Link 0.0 1.0 1000000 50 0 0
+Link 1.1 2.0 1000000 50 0 0
+
+
+dumpappstate 50000 all
+dumppacketstats 50000 all
+
+
+
+
+
+

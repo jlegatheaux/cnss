@@ -1,0 +1,27 @@
+# Simple tests of sending and receiving packets - not ready, revise nodes and links
+
+parameter stop 300000   # 300 seconds = 5 minutes
+
+
+node 0 1 rcss.simulator.FloodingSwControl rcss.examples.SimpleSender
+node 1 2 rcss.simulator.FloodingSwControl rcss.examples.SimpleSwitch
+node 2 1 rcss.simulator.FloodingSwControl rcss.examples.SimpleReceiver
+
+Link 0.0 1.0 1000000 50 0 0
+Link 1.1 2.0 1000000 50 0 0
+
+
+# param app.clock-period 0
+# param app.timeout-period 0
+# param control.clock-period 0 
+# param control.timeout-period 0
+
+
+dumpappstate 21700 all
+dumppacketstats 21700 all
+
+
+
+
+
+
