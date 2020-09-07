@@ -1,12 +1,39 @@
-developed for teaching purposes. It is written in Java and is based on a preliminary version developed by Adam Greenhalgh da University College of London, around 2001. While the initial version was only suitable to test routing algorithms based on the distance vector principle, with a notion of link that had 0 transit time, CNSS has a traditional notion of link characterised by transmission and propagation delays as well as error rate. The notion of network node is also more general. CNSS nodes execute processing steps of user provided control and application algorithms. With CNSS it is possible to simulate any routing algorithm as well as applications running on heterogeneous nodes.
+## CNSS Overview ( Computer Networks Simple Simulator )
 
-CNSS simulates a packet switched network where each processing is instantaneous, i.e. executed without advancing the virtual clock, while communications make that clock advance. Virtual time resolution is 1 millisecond, i.e. the clock advances 1 by 1 ms. All nodes and links advance their status in a logically perfectly synchronised global time in a lock step way.
+CNSS is written in Java and has been developed for teaching purposes.  
 
-The main concepts of the simulator are the following. A network is composed of a set of nodes interconnected by links. Nodes exchange packets. In each clock tick, all nodes execute a processing step by consuming the events scheduled to them for this processing step. These events may be clock ticks, alarms or packet receptions. The execution of the processing step be each node may trigger future events like alarms, delivery of messages to the same or other nodes, etc.
+CNSS was inspired by a simulator, developed around 2001, by Adam Greenhalgh from the University College of London. This simulator is
+mainly intended for testing routing algorithms based on the distance vector principle, and is limited to networks with zero transit
+time links. 
+ 
+CNSS is capable of simulating any routing algorithm, as well as simple applications running on heterogeneous nodes. To that end, CNSS leverages
+a more realistic notion of link, characterised by transmission and propagation delays as well as **(jitter?)** and error rate. Morevoer,
+in CNSS a network can be comprised of different types of nodes, capable of executing user provided control and application algorithms,
+in a more generic fashion.
+
+
+
+
+<!--- (While the initial version was only suitable to test routing algorithms based on the distance vector principle, with a notion of link that had 0 transit time, CNSS has a traditional notion of link characterised by transmission and propagation delays as well as error rate. The notion of network node is also more general. CNSS nodes execute processing steps of user provided control and application algorithms. With CNSS it is possible to simulate any routing algorithm as well as applications running on heterogeneous nodes.
+-->
+
+## CNSS in short
+
+CNSS simulates a packet switched network where each processing step is **instantaneous**, i.e., executed without advancing the virtual clock, while communications make that clock advance. Virtual time resolution is 1 millisecond, i.e., the clock advances 1 by 1 ms. All nodes and links update their state in a lock step way, according to a logically, perfectly synchronised global notion of time. 
+
+The main concepts of the simulator are the following:
+
+A network is composed of a set or mix of nodes, interconnected by links. 
+
+Nodes exchange packets. 
+
+In each clock tick, all nodes execute a processing step by consuming the events scheduled to them for this processing step. These events may be clock ticks, alarms or packet receptions. The execution of a processing step in each node may trigger future events like alarms, delivery of messages to the same or other nodes, etc.
 
 Nodes execute a common kernel that triggers processing steps execution using up calls to the methods of two algorithms defined by the users: a control algorithm and an applications algorithm. These algorithms may be different in each node. These up calls processing steps can send messages, set alarms, etc. The system imposes that the execution of each node is structured as the execution of two automata: a control automaton controlled by the control algorithm, and an application automaton controlled by the application algorithm.
 
-The configuration of the network is defined by a configuration file using simple commands to define nodes and links and their parameters, as well as special events that can be triggered at defined processing steps or time values.
+Network configuration is defined by a configuration file using simple commands to add nodes and links and their parameters, as well as special events that can be triggered at defined processing steps or time values.
+
+---
 
 Next, nodes, links and the configuration file are presented in more detail.
 
