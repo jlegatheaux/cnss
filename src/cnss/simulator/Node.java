@@ -3,6 +3,7 @@ package cnss.simulator;
 import java.util.LinkedList;
 
 import cnss.simulator.Event.EventType;
+import cnss.simulator.Packet.PacketType;
 
 /**
  * The <code>Node</code> class represents a node in the network. Each node
@@ -11,9 +12,9 @@ import cnss.simulator.Event.EventType;
  * using java reflection. The same applies for the application code the node
  * executes.
  * 
- * @author  System's team of the Department of Informatics of FCT/UNL based on a
- * @author  preliminary version by Adam Greenhalgh of UCL
- * @version 1.0, September 2021                                                            
+ * @author System's team of the Department of Informatics of FCT/UNL based on a
+ * @author preliminary version by Adam Greenhalgh of UCL
+ * @version 1.0, September 2021
  */
 public class Node {
 
@@ -126,9 +127,9 @@ public class Node {
 		if (app_clock_tick_period < 0)
 			control_clock_tick_period = 0;
 		if (control_clock_tick_period > 0)
-			outputEvents.add(new Event(EventType.CONTROLCLOCKTICK, control_clock_tick_period, 0, null, null, node_id, 0));
+			outputEvents.add(new Event(EventType.CONTROL_CLOCK_TICK, control_clock_tick_period, 0, null, null, node_id, 0));
 		if (app_clock_tick_period > 0)
-			outputEvents.add(new Event(EventType.APPCLOCKTICK, app_clock_tick_period, 0, null, null, node_id, 0));
+			outputEvents.add(new Event(EventType.APP_CLOCK_TICK, app_clock_tick_period, 0, null, null, node_id, 0));
 	}
 
 	/**
@@ -227,10 +228,10 @@ public class Node {
 		boolean has_control_delivery = false;
 		// System.err.println("clean_input_events");
 		for (Event ev : inputEvents) {
-			if (ev.getOperation() == EventType.DELIVERPACKET) {
-				if (ev.getPacket().getType() == Packet.DATA)
+			if (ev.getOperation() == EventType.DELIVER_PACKET) {
+				if (ev.getPacket().getType() == PacketType.DATA)
 					has_app_delivery = true;
-				else if (ev.getPacket().getType() == Packet.CONTROL)
+				else if (ev.getPacket().getType() == PacketType.CONTROL)
 					has_control_delivery = true;
 			}
 		}
@@ -240,7 +241,7 @@ public class Node {
 		LinkedList<Event> newInputList = new LinkedList<Event>();
 		while (inputEvents.size() > 0) {
 			Event ev = inputEvents.poll();
-			if (ev.getOperation() == EventType.APPTIMEOUT && has_app_delivery || ev.getOperation() == EventType.CONTROLTIMEOUT && has_control_delivery) {
+			if (ev.getOperation() == EventType.APP_TIMEOUT && has_app_delivery || ev.getOperation() == EventType.CONTROL_TIMEOUT && has_control_delivery) {
 				// remove from input list
 			} else
 				newInputList.add(ev);
@@ -255,7 +256,8 @@ public class Node {
 	 * processing step
 	 */
 	public void process_input_events(int n) {
-		if (inputEvents.size() == 0) return; // nothing to process
+		if (inputEvents.size() == 0)
+			return; // nothing to process
 		now = n;
 		clean_input_queue();
 		while (inputEvents.size() > 0) {
@@ -269,25 +271,25 @@ public class Node {
 				control_alg.on_link_up(now, ev.getInterface());
 			else if (ev.getOperation() == EventType.DOWNLINK)
 				control_alg.on_link_down(now, ev.getInterface());
-			else if (ev.getOperation() == EventType.CONTROLTIMEOUT) {
+			else if (ev.getOperation() == EventType.CONTROL_TIMEOUT) {
 				if (ev.getTime() == next_control_timeout)
 					control_alg.on_timeout(now); // the node is still waiting for this timeout
 				else {
 				}
 				; // ignore this timeout
-			} else if (ev.getOperation() == EventType.APPTIMEOUT) {
+			} else if (ev.getOperation() == EventType.APP_TIMEOUT) {
 				if (ev.getTime() == next_app_timeout) // the node is still waiting for this timeout
 					app_alg.on_timeout(now);
 				else {
 				}
 				; // ignore this timeout
-			} else if (ev.getOperation() == EventType.CONTROLCLOCKTICK) {
+			} else if (ev.getOperation() == EventType.CONTROL_CLOCK_TICK) {
 				control_alg.on_clock_tick(now);
-				outputEvents.add(new Event(EventType.CONTROLCLOCKTICK, now + control_clock_tick_period, 0, null, null, node_id, 0));
-			} else if (ev.getOperation() == EventType.APPCLOCKTICK) {
+				outputEvents.add(new Event(EventType.CONTROL_CLOCK_TICK, now + control_clock_tick_period, 0, null, null, node_id, 0));
+			} else if (ev.getOperation() == EventType.APP_CLOCK_TICK) {
 				app_alg.on_clock_tick(now);
-				outputEvents.add(new Event(EventType.APPCLOCKTICK, now + app_clock_tick_period, 0, null, null, node_id, 0));
-			} else if (ev.getOperation() == EventType.DELIVERPACKET) {
+				outputEvents.add(new Event(EventType.APP_CLOCK_TICK, now + app_clock_tick_period, 0, null, null, node_id, 0));
+			} else if (ev.getOperation() == EventType.DELIVER_PACKET) {
 				Packet p = ev.getPacket();
 				if (p.getTtl() == 1) {
 					counter[DROP]++;
@@ -297,15 +299,15 @@ public class Node {
 				if (p.getDestination() == node_id || p.getDestination() == Packet.ONEHOP) { // local packet
 					// System.out.println("Received packet "+p);
 					counter[RECV]++;
-					if (p.getType() == Packet.DATA) {
+					if (p.getType() == PacketType.DATA) {
 						next_app_timeout = 0; // cancels all waiting timeouts
 						app_alg.on_receive(now, p);
-					} else if (p.getType() == Packet.CONTROL) {
+					} else if (p.getType() == PacketType.CONTROL) {
 						next_control_timeout = 0; // cancels all waiting timeouts
 						control_alg.on_receive(now, p, ev.getInterface());
-					} else if (p.getType() == Packet.TRACING) {
+					} else if (p.getType() == PacketType.TRACING) {
 						// make the result of the tracing available
-						System.out.println("Received tracing packet at time "+now+" "+ p);
+						System.out.println("Received tracing packet at time " + now + " " + p);
 					} else {
 						System.err.println("Node process_events: unknown received packet type " + p);
 						System.exit(-1);
@@ -343,12 +345,12 @@ public class Node {
 			System.err.println("send: can only send local origin packets");
 			System.exit(-1);
 		}
-		if (p.getType() != Packet.DATA) {
+		if (p.getType() != PacketType.DATA) {
 			System.err.println("send: can only send data packets");
 			System.exit(-1);
 		}
 		if (p.getDestination() == node_id) { // local delivery
-			outputEvents.add(new Event(EventType.DELIVERPACKET, now + 1, 0, null, p, node_id, LOCAL));
+			outputEvents.add(new Event(EventType.DELIVER_PACKET, now + 1, 0, null, p, node_id, LOCAL));
 		} else
 			control_alg.forward_packet(now, p, LOCAL);
 	}
@@ -369,7 +371,7 @@ public class Node {
 		}
 		if (iface == LOCAL || p.getDestination() == node_id) {
 			// local delivery
-			outputEvents.add(new Event(EventType.DELIVERPACKET, now + 1, 0, null, p, node_id, LOCAL));
+			outputEvents.add(new Event(EventType.DELIVER_PACKET, now + 1, 0, null, p, node_id, LOCAL));
 			counter[SENT]++;
 		} else if (iface == UNKNOWN || iface >= num_interfaces) {
 			// drop the packet since it is impossible to send it
@@ -382,7 +384,8 @@ public class Node {
 
 	/**
 	 * Returns the interface weight for the specified interface. This may or should
-	 * be computed by Control Algorithms. However, it is given as an help and example
+	 * be computed by Control Algorithms. However, it is given as an help and
+	 * example
 	 * 
 	 * @param iface
 	 * @param type  (= 1, weight always 1 for RIP, 2 weight better than RIP weight ,
@@ -421,7 +424,7 @@ public class Node {
 			System.exit(-1);
 		}
 		next_app_timeout = now + t; // next expected timeout
-		outputEvents.add(new Event(EventType.APPTIMEOUT, next_app_timeout, 0, null, null, node_id, 0));
+		outputEvents.add(new Event(EventType.APP_TIMEOUT, next_app_timeout, 0, null, null, node_id, 0));
 	}
 
 	/**
@@ -437,13 +440,13 @@ public class Node {
 			System.exit(-1);
 		}
 		next_control_timeout = now + t; // next expected timeout
-		outputEvents.add(new Event(EventType.CONTROLTIMEOUT, next_control_timeout, 0, null, null, node_id, 0));
+		outputEvents.add(new Event(EventType.CONTROL_TIMEOUT, next_control_timeout, 0, null, null, node_id, 0));
 	}
 
 	/**
-	 * Creates a data packet with the current node as sender
-	 * the ApplicationAlgorithm could implement the functionality
-	 * but setting a good sequence number
+	 * Creates a data packet with the current node as sender the
+	 * ApplicationAlgorithm could implement the functionality but setting a good
+	 * sequence number
 	 * 
 	 * @param receiver the receiver id
 	 * @param payload  the payload of the packet
@@ -455,14 +458,12 @@ public class Node {
 		p.setSequenceNumber(packet_counter);
 		return p;
 	}
-	
-	
+
 	/**
-	 * Creates a control packet
-	 * the ControlAlgorithm could implement the functionality
-	 * but setting a good sequence number
+	 * Creates a control packet the ControlAlgorithm could implement the
+	 * functionality but setting a good sequence number
 	 * 
-	 * @param sender the sender id
+	 * @param sender   the sender id
 	 * @param receiver the receiver id
 	 * @param payload  the payload of the packet
 	 * @return the created data packet

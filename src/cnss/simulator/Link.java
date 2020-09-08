@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import cnss.simulator.Event.EventType;
+import cnss.simulator.Packet.PacketType;
 
 /**
  * A <code>Link</code> class that represents a link between two nodes. It
@@ -12,9 +13,9 @@ import cnss.simulator.Event.EventType;
  * with the simulation the transmission of packets from one side to the other
  * side.
  * 
- * @author  System's team of the Department of Informatics of FCT/UNL based on a
- * @author  preliminary version by Adam Greenhalgh of UCL
- * @version 1.0, September 2021                                                            
+ * @author System's team of the Department of Informatics of FCT/UNL based on a
+ * @author preliminary version by Adam Greenhalgh of UCL
+ * @version 1.0, September 2021
  */
 public class Link {
 	// there are two sides: side 1 and side 2, each with a node
@@ -149,9 +150,9 @@ public class Link {
 				p = out1.poll(); // retrieves the packet from the queue
 				// TODO: packet dropping and jitter
 
-				if (p.getType() == Packet.TRACING) {
+				if (p.getType() == PacketType.TRACING) {
 					// add the link crossed to the path - time is the start transmission time
-					String trace = p.getPayload().toString() + "time "+now+" "+ node1 + "." + iface1 + "->" + node2 + "." + iface2;
+					String trace = p.getPayload().toString() + "time " + now + " " + node1 + "." + iface1 + "->" + node2 + "." + iface2;
 					p.setPayload(trace.getBytes());
 				}
 				// in each side of the link, if several packets are transmitted in sequence,
@@ -162,7 +163,7 @@ public class Link {
 					transitTime = 1; // this forces the treatment of the event
 				// in the next processing step, otherwise the event would be ignored
 				// System.out.println("TransmitPackets computed "+transitTime+" ms");
-				outputEvents.add(new Event(EventType.DELIVERPACKET, now + transitTime, 0, null, p, node2, iface2));
+				outputEvents.add(new Event(EventType.DELIVER_PACKET, now + transitTime, 0, null, p, node2, iface2));
 				counter2_in++; // the packet will be later received by node 2, interface 2
 			}
 			// now side 2
@@ -172,7 +173,7 @@ public class Link {
 				// TODO: packet dropping and jitter
 				// besides incrementing counters - in which counters?
 
-				if (p.getType() == Packet.TRACING) {
+				if (p.getType() == PacketType.TRACING) {
 					// add the link crossed to the path
 					// add the link crossed to the path
 					String trace = p.getPayload().toString() + " " + node2 + "." + iface2 + "->" + node1 + "." + iface1;
@@ -186,7 +187,7 @@ public class Link {
 					transitTime = 1; // this forces the treatment of the event
 				// in the next processing step, otherwise the event would be ignored
 				// System.out.println("TransmitPackets computed "+transitTime+" ms");
-				outputEvents.add(new Event(EventType.DELIVERPACKET, now + transitTime, 0, null, p, node1, iface1));
+				outputEvents.add(new Event(EventType.DELIVER_PACKET, now + transitTime, 0, null, p, node1, iface1));
 				counter1_in++; // the packet will be later received by node 1, interface 1
 			}
 		} else {

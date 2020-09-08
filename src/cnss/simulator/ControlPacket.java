@@ -15,6 +15,6 @@ public class ControlPacket extends Packet {
 	 */
 	ControlPacket(int src, int dst, byte[] pl) {
 		super(src, dst, pl);
-		type = Packet.CONTROL;
+		type = PacketType.CONTROL;
 	}
 }

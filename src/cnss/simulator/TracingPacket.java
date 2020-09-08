@@ -15,6 +15,6 @@ public class TracingPacket extends Packet {
 	 */
 	TracingPacket(int src, int dst, byte[] pl) {
 		super(src, dst, pl);
-		type = Packet.TRACING;
+		type = PacketType.TRACING;
 	}
 }

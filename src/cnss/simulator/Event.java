@@ -4,15 +4,15 @@ package cnss.simulator;
  * The <code>Event</code> class which represents an event to occur in the
  * simulator.
  * 
- * @author  System's team of the Department of Informatics of FCT/UNL based on a
- * @author  preliminary version by Adam Greenhalgh of UCL
- * @version 1.0, September 2021                                                            
+ * @author System's team of the Department of Informatics of FCT/UNL based on a
+ * @author preliminary version by Adam Greenhalgh of UCL
+ * @version 1.0, September 2021
  */
 public class Event {
 
 	public static enum EventType {
-		UNKNOWN, TRACEROUTE, UPLINK, DOWNLINK, DUMPRT, DUMPPACKETS, APPCLOCKTICK, CONTROLCLOCKTICK, APPTIMEOUT, CONTROLTIMEOUT, DELIVERPACKET, DUMPCONTROLSTATE,
-		DUMPAPPSTATE
+		UNKNOWN, TRACEROUTE, UPLINK, DOWNLINK, DUMP_RT, DUMP_PACKETS, APP_CLOCK_TICK, CONTROL_CLOCK_TICK, APP_TIMEOUT, CONTROL_TIMEOUT, DELIVER_PACKET,
+		DUMP_CONTROLSTATE, DUMP_APPSTATE
 	}
 
 	public static long DISPLACEMENT = 1000000; // # of != events per processing step

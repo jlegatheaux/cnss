@@ -4,22 +4,27 @@ package cnss.simulator;
  * The <code>Packet</code> class models a network packet.
  */
 public class Packet {
-	/**
-	 * The unknown packet type, used before a packet is classified.
-	 */
-	public static int UNKNOWN = 0;
-	/**
-	 * The data packet type.
-	 */
-	public static int DATA = 1;
-	/**
-	 * A Routing Packet
-	 */
-	public static int CONTROL = 2;
-	/**
-	 * A Tracing Packet
-	 */
-	public static int TRACING = 3;
+
+	public static enum PacketType {
+		DATA, CONTROL, TRACING, UNKNOWN
+	}
+
+//	/**
+//	 * The unknown packet type, used before a packet is classified.
+//	 */
+//	public static int UNKNOWN = 0;
+//	/**
+//	 * The data packet type.
+//	 */
+//	public static int DATA = 1;
+//	/**
+//	 * A Routing Packet
+//	 */
+//	public static int CONTROL = 2;
+//	/**
+//	 * A Tracing Packet
+//	 */
+//	public static int TRACING = 3;
 	/**
 	 * The size of a Packet with no payload - similar to IP
 	 */
@@ -41,11 +46,11 @@ public class Packet {
 
 	protected int src;
 	protected int dst;
-	protected byte[] payload;
 	protected int ttl;
-	protected int type;
 	protected int seq;
 	protected int size; // size of the packet including payload size
+	protected byte[] payload;
+	protected PacketType type;
 
 	/**
 	 * <code>Packet</code> constructor for the super class. This defaults to setting
@@ -58,7 +63,7 @@ public class Packet {
 	public Packet(int s, int d, byte[] pl) {
 		src = s;
 		dst = d;
-		type = UNKNOWN;
+		type = PacketType.UNKNOWN;
 		payload = pl;
 		ttl = INITIALTTL;
 		seq = 0;
@@ -96,7 +101,7 @@ public class Packet {
 	 * 
 	 * @return int packet type
 	 */
-	public int getType() {
+	public PacketType getType() {
 		return type;
 	}
 
@@ -105,7 +110,7 @@ public class Packet {
 	 * 
 	 * @param t packet type
 	 */
-	public void setType(int t) {
+	public void setType(PacketType t) {
 		type = t;
 	}
 
@@ -153,7 +158,7 @@ public class Packet {
 	public String toString() {
 		String s;
 		s = "src " + src + " dst " + dst + " type " + type + " ttl " + ttl + " seq " + seq + " size " + size;
-		if (type == TRACING) {
+		if (type == PacketType.TRACING) {
 			s = s + " path " + payload.toString();
 		}
 		return s;

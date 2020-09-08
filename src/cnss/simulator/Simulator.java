@@ -41,7 +41,6 @@ import java.util.TreeMap;
 
 import cnss.simulator.Event.EventType;
 
-
 public class Simulator {
 	private String config_file;
 
@@ -155,26 +154,23 @@ public class Simulator {
 			for (int i = 0; i < args.length; i++)
 				args[i] = result[i + 5];
 			Node nd = new Node(Integer.parseInt(result[1]), Integer.parseInt(result[2]), result[3], result[4], args, globalParameters);
-			// result[1] = node id, result[2] = # interfaces, result[3] = control class name,
+			// result[1] = node id, result[2] = # interfaces, result[3] = control class
+			// name,
 			// result[4] = app class name result[5] = args[0] .....
 			tmp_nodes.add(nd);
 		}
 
 		else if (result[0].equalsIgnoreCase("link")) {
-			Link l = new Link(
-					Integer.parseInt(result[1].split("\\.")[0]),
-					Integer.parseInt(result[1].split("\\.")[1]),
-					Integer.parseInt(result[2].split("\\.")[0]),
-					Integer.parseInt(result[2].split("\\.")[1]),
-					Long.parseLong(result[3]),      // bandwidth in bps
-					Integer.parseInt(result[4]),    // latency in ms
-					Double.parseDouble(result[5]),    // error rate
-					Double.parseDouble(result[6]),    // jitter
-					this   // the link needs a reference to the simulator to call newEvent
-					);
+			Link l = new Link(Integer.parseInt(result[1].split("\\.")[0]), Integer.parseInt(result[1].split("\\.")[1]),
+					Integer.parseInt(result[2].split("\\.")[0]), Integer.parseInt(result[2].split("\\.")[1]), Long.parseLong(result[3]), // bandwidth in bps
+					Integer.parseInt(result[4]), // latency in ms
+					Double.parseDouble(result[5]), // error rate
+					Double.parseDouble(result[6]), // jitter
+					this // the link needs a reference to the simulator to call newEvent
+			);
 			// the initial state of the link is always "up" unless otherwise stated
 			if (result.length == 8) {
-				if (result[7].equalsIgnoreCase("down") ) {
+				if (result[7].equalsIgnoreCase("down")) {
 					l.setState(false);
 				}
 			}
@@ -208,22 +204,22 @@ public class Simulator {
 			// result[1] = time, result[2] = all or node id
 			String[] args = new String[1];
 			args[0] = result[2];
-			createMainQueueEvent(EventType.DUMPRT, Integer.parseInt(result[1]), args);
+			createMainQueueEvent(EventType.DUMP_RT, Integer.parseInt(result[1]), args);
 		} else if (result[0].equalsIgnoreCase("dumpcontrolstate")) {
 			// result[1] = time, result[2] = all or node id
 			String[] args = new String[1];
 			args[0] = result[2];
-			createMainQueueEvent(EventType.DUMPCONTROLSTATE, Integer.parseInt(result[1]), args);
+			createMainQueueEvent(EventType.DUMP_CONTROLSTATE, Integer.parseInt(result[1]), args);
 		} else if (result[0].equalsIgnoreCase("dumpappstate")) {
 			// result[1] = time, result[2] = all or node id
 			String[] args = new String[1];
 			args[0] = result[2];
-			createMainQueueEvent(EventType.DUMPAPPSTATE, Integer.parseInt(result[1]), args);
+			createMainQueueEvent(EventType.DUMP_APPSTATE, Integer.parseInt(result[1]), args);
 		} else if (result[0].equalsIgnoreCase("dumppacketstats")) {
 			// result[1] = time, result[2] = all or node id
 			String[] args = new String[1];
 			args[0] = result[2];
-			createMainQueueEvent(EventType.DUMPPACKETS, Integer.parseInt(result[1]), args);
+			createMainQueueEvent(EventType.DUMP_PACKETS, Integer.parseInt(result[1]), args);
 		} else if (result[0].startsWith("#")) {
 			// skipping comments
 		} else {
@@ -263,7 +259,7 @@ public class Simulator {
 				packet.setSequenceNumber(packet_counter);
 				ev.setPacket(packet);
 				ev.setNode(packet.getSource());
-				ev.setOperation(EventType.DELIVERPACKET);
+				ev.setOperation(EventType.DELIVER_PACKET);
 				nodes[packet.getSource()].addInputEvent(ev);
 				break;
 
@@ -290,7 +286,7 @@ public class Simulator {
 					}
 				}
 				break;
-			case DUMPRT: // Immediately executed
+			case DUMP_RT: // Immediately executed
 				if (ev.getArgument(0).equals("all")) {
 					for (int i = 0; i < nodes.length; i++) {
 						nodes[i].dumpRoutingTable(now);
@@ -299,7 +295,7 @@ public class Simulator {
 					nodes[Integer.parseInt(ev.getArgument(0))].dumpRoutingTable(now);
 				}
 				break;
-			case DUMPPACKETS: // Immediately executed
+			case DUMP_PACKETS: // Immediately executed
 				// System.out.println("event "+ev);
 				if (ev.getArgument(0).equals("all")) {
 					for (int i = 0; i < nodes.length; i++) {
@@ -309,7 +305,7 @@ public class Simulator {
 					nodes[Integer.parseInt(ev.getArgument(0))].dumpPacketStats(now);
 				}
 				break;
-			case DUMPCONTROLSTATE: // Immediately executed
+			case DUMP_CONTROLSTATE: // Immediately executed
 				// System.out.println("event "+ev);
 				if (ev.getArgument(0).equals("all")) {
 					for (int i = 0; i < nodes.length; i++) {
@@ -319,7 +315,7 @@ public class Simulator {
 					nodes[Integer.parseInt(ev.getArgument(0))].dumpControlState(now);
 				}
 				break;
-			case DUMPAPPSTATE: // Immediately executed
+			case DUMP_APPSTATE: // Immediately executed
 				// System.out.println("event "+ev);
 				if (ev.getArgument(0).equals("all")) {
 					for (int i = 0; i < nodes.length; i++) {
@@ -329,11 +325,11 @@ public class Simulator {
 					nodes[Integer.parseInt(ev.getArgument(0))].dumpAppState(now);
 				}
 				break;
-			case CONTROLTIMEOUT:
-			case APPTIMEOUT:
-			case DELIVERPACKET:
-			case CONTROLCLOCKTICK:
-			case APPCLOCKTICK:
+			case CONTROL_TIMEOUT:
+			case APP_TIMEOUT:
+			case DELIVER_PACKET:
+			case CONTROL_CLOCK_TICK:
+			case APP_CLOCK_TICK:
 				nodes[ev.getNode()].addInputEvent(ev);
 				break;
 			default:
@@ -473,9 +469,8 @@ public class Simulator {
 	}
 
 	/**
-	 * Processes the events in the output queue of a Link at the end of a
-	 * processing step by controlling them and transferring them to the main event
-	 * queue
+	 * Processes the events in the output queue of a Link at the end of a processing
+	 * step by controlling them and transferring them to the main event queue
 	 * 
 	 * @param l   the link
 	 * @param now virtual clock of the executed processing step

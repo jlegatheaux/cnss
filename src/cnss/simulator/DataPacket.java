@@ -15,6 +15,6 @@ public class DataPacket extends Packet {
 	 */
 	DataPacket(int src, int dst, byte[] pl) {
 		super(src, dst, pl);
-		type = Packet.DATA;
+		type = PacketType.DATA;
 	}
 }
