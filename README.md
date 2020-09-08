@@ -1,4 +1,4 @@
-### CNSS Overview ( Computer Networks Simple Simulator )
+# CNSS Overview ( Computer Networks Simple Simulator )
 
 CNSS is written in Java and has been developed for teaching purposes.  
 
@@ -24,11 +24,13 @@ Nodes execute a common kernel that triggers processing steps execution using up 
 
 Network configuration is defined by a configuration file using simple commands to add nodes and links and their parameters, as well as special events that can be triggered at defined processing steps or time values.
 
+The real time progress of the simulation is driven by the time required to execute the nodes processing steps, therefore, nodes processing steps cannot execute blocking actions, which would block the simulator. Reading and writing local files is accdeptable as well as any other quick execution method calss, but using Java calls like Thread.sleep() or any kind of synchronization is fully discouraged.
+
 Next, packets, nodes, links and the configuration file are presented in more detail.
 
-### Packets
+## Packets
 
-Packets are objects of the class *Packet*. This class has several subclasses among which *DataPacket* and *ControlPacket* that represent differnet types of packets. Data packets are sent and received by the ApplicationAlgorithm part of the nodes. Control packets are sent and received by the ApplicationAlgorithm part of the nodes. Packets have several fields, namely: 
+Packets are objects of the class *Packet*. This class has several subclasses among which *DataPacket* and *ControlPacket* that represent different types of packets. Data packets are sent and received by the ApplicationAlgorithm part of the nodes. Control packets are sent and received by the ApplicationAlgorithm part of the nodes. In fact, these two types of packets could also be understood as CNSS supporting two kinds of IP ports by analogy. Packets have several fields, namely: 
 
 ```java
 protected int src;  // the initial sending node
@@ -37,12 +39,12 @@ protected int ttl;  // packets time-to-live
 protected int type; // data, control, ...
 protected int seq;  // sequence number
 protected int size; // size of the packet including the payload size
-protected byte[] payload; // the pauyload of the packet
+protected byte[] payload; // the payload of the packet
 ``` 
 
-Some contants in the Packet class code have speacial meaning for the CNSS notion of Packet: *HEADERSIZE = 20* is the size of the header to mirror IPv4 packets size and *INITIALTTL = 32* is the default value of the packets TTL. 
+Some contants in the Packet class have speacial meaning for the CNSS notion of Packet: *HEADERSIZE = 20* is the size of the header to mirror IPv4 packets size and *INITIALTTL = 32* is the default value of packets TTL. 
 
-### Nodes
+## Nodes
 
 Nodes execute two algorithms, an application algorithm and a control algorithm. Each of these algorithms is structured as an automaton executing actions associated with a pre-defined set of events, each one called an **upcall**.
 
@@ -52,43 +54,56 @@ Each upcall, but the *initialise* one, is triggered by the delivery of an event 
 
 The definition of the interfaces of the two algorithms executed by a node are presented below.
 
-## Interface ApplicationAlgorithm 
+## ApplicationAlgorithm Interface
 
-The ApplicationAlgorithm interface should be implemented by any class whose instances are intended to implement the application part running in nodes. The class that implements this algorithm must have a zero argument constructor. All methods have as first argument the virtual time of the processing step where the event fired. Methods:
+The ApplicationAlgorithm interface should be implemented by any class whose instances are intended to implement application automata executed by nodes. The class that implements this algorithm must have a zero argument constructor. All methods have as first argument, the virtual time of the processing step where the event fired. Methods:
 
+```java
 public int initialise(int now, int node_id, Node nodeObj, String[] args);
+```
 
-Initialize the application algorithm and returns the required app_clock_tick_period. If app_clock_tick_period == 0, no clock_ticks will be submitted to the class. Parameters: id - this node id, nodeObj - a refrence to the node object executing this algorithm, args - the arguments of the application algorithm.
+Initializes the application algorithm or automaton and returns the desired *control_clock_tick_period*. If *control_clock_tick_period == 0*, no **clock_ticks** will be submitted to the algorithm.
 
+Parameters: *id* is this node id, *nodeObj* is a reference to the node object executing this algorithm, *args* is an array of arguments specified in the *configuration file*  (see the configuration file section). 
+
+```java
 public void on_clock_tick(int now);
+```
 
 Signals a clock tick event.	
 
+```java
 public void on_timeout(int now);
+```
 	
 Signals a timeout event.
 
-public void on_receive(int now, Packet p);
+```java
+public void on_receive(int now, DataPacket p);
+```
 
-Given an application packet from another node, process it. Parameter: p the packet received.
+Given a data packet from another node, process it. Parameter: *p* the received packet.
 
+```java
 public void showState(int now);
+```
 
 Prints application state table(s) to the screen in a previously agreed format.
-	
-These up calls are called at each processing step where there is an event directed to this node.
 
-The node processing steps application algorithm can use the following down calls:
+The node processing steps application algorithm can use public methods of the class DataPacket as well as the following down calls:
 
-	 nodeObj.send(DataPacket p)
-	 nodeObj.set_timeout(int t)
-	 nodeObj.createDataPacket (int receiver, byte[] payload)
+```java
+nodeObj.createDataPacket (int receiver, byte[] payload)
+nodeObj.send(DataPacket p)
+nodeObj.set_timeout(int t)
+```
 
-These processing steps can also access the public methods of class Packet.
+When a packet is directly created, its sequence number is 0. In order to guarantee that packet sequence numbers are different (relative to each node), packets must be created using *nodeObj.createDataPacket(…)* method, which take care of providing unique sequence numbers.
 
-# ControlAlgorithm Interface
 
-This algorithm implements the control part of the node, for example, the way the node routes packets not directed to himself. The ControlAlgorithm interface should be implemented by any class whose instances are intended to implement the application part of the node. The class that implements this algorithm must have a zero argument constructor. All methods have as first argument the virtual time of the processing step where the event fired. First are apresented the nterface constants, followed by the methods.
+## ControlAlgorithm Interface
+
+The ControlAlgorithm interface should be implemented by any class whose instances are intended to implement control automata executed by nodes, for example, the way the node routes packets not directed to himself. The ControlAlgorithm interface should be implemented by any class whose instances are intended to implement the application part of the node. The class that implements this algorithm must have a zero argument constructor. All methods have as first argument the virtual time of the processing step where the event fired. First are apresented the interface constants, followed by the methods.
 
 ```java
 static final int LOCAL = Node.LOCAL;     // the number of the virtual loop back interface
@@ -99,7 +114,7 @@ static final int INFINITY = 60;  // just a suggestion
 ```java
 public int initialise(int now, int node_id, Node nodeObj, GlobalParams parameters, Link[] links, int nint);
 ```	
-Initializes the control algorithm and returns the required *control_clock_tick_period*. If *control_clock_tick_period == 0*, no **clock_ticks** will be submitted to the algorithm. Interfaces are numbered 0 to *nint-1*. Each has a link attached: *links[i]*. Interface *LOCAL* with value -1 is virtual and denotes, when needed, the local loop interface. 
+Initializes the control algorithm and returns the desired *control_clock_tick_period*. If *control_clock_tick_period == 0*, no **clock_ticks** will be submitted to the algorithm. Interfaces are numbered 0 to *nint-1*. Each has a link attached: *links[i]*. Interface *LOCAL* with value -1 is virtual and denotes, when needed, the local loop interface. 
 
 Parameters: *id* is this node id, *nodeObj* is a reference to the node object executing this algorithm, *parameters* is the collection of global parameters (see the configuration file section), *links* is the nodes links array, *nint* is the number of interfaces (or links) of this node, and the method must return its requested *clock_tick_period* value. 
 
@@ -177,19 +192,11 @@ class Node (*)
 class Parameters (*)
 ```
 
-(*) Use only methods reading state of these objects.
+(*) Use only public methods reading the state of these objects.
 
-When a packet is created its sequence number is 0. In order to guarantee that packet sequence numbers are different for each node, packets must be created using nodeObj.createDataPacket(…) and nodeObj.createControlPacket methods, that take care of providing unique sequence numbers. Therefore, this algorithm must avoid creating packets directly when maintaining packets se.
-Quince numbers uniqueness.
+When a packet is created its sequence number is 0. In order to guarantee that packet sequence numbers are different (relative to each node), packets must be created using *nodeObj.createDataPacket(…)* and *nodeObj.createControlPacket(...)* methods, which take care of providing unique sequence numbers. Therefore, this algorithm must avoid creating packets directly when maintaining packets sequence numbers uniqueness is important.
 
-
-Execução dos nós
-
-
-
-Os nós têm um certo número de interfaces às quais estão ligados links.
-
-Conceito de link
+## Links
 
 Todos os links são ponto a ponto (com duas extremidades – extremidade 1 e 2) que ligam entre si duas interfaces de nós (em princípio distintos). Os links são caracterizados por:
 
@@ -200,7 +207,8 @@ Error rate - %
 Jitter - %
 
 Cada extremidade tem uma fila de espera de entrada e outra de saída (in e out). No final da execução de cada processing step dos nós, todos os pacotes que estes enviaram estão depositados nas filas de espera de out dos seus links e são gerados eventos Packet Delivery correspondentes calculando o tempo de trânsito para a travessar o link.
-Configuração da rede
+
+## Network and simulation configuration file
 
 A rede é configurada através de um ficheiro de texto passado em parâmetro da chamada do simulador.
 
