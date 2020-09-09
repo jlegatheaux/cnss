@@ -9,22 +9,6 @@ public class Packet {
 		DATA, CONTROL, TRACING, UNKNOWN
 	}
 
-//	/**
-//	 * The unknown packet type, used before a packet is classified.
-//	 */
-//	public static int UNKNOWN = 0;
-//	/**
-//	 * The data packet type.
-//	 */
-//	public static int DATA = 1;
-//	/**
-//	 * A Routing Packet
-//	 */
-//	public static int CONTROL = 2;
-//	/**
-//	 * A Tracing Packet
-//	 */
-//	public static int TRACING = 3;
 	/**
 	 * The size of a Packet with no payload - similar to IP
 	 */

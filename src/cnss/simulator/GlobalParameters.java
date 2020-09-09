@@ -11,7 +11,7 @@ public class GlobalParameters {
 	 * <code>GlobalVars</code> constructor, maintains a map of global variables
 	 */
 	public GlobalParameters() {
-		vars = new HashMap<String, String>();
+		vars = new HashMap<>();
 	}
 
 	/**

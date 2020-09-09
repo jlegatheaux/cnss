@@ -56,7 +56,7 @@ public class SimpleTest implements ApplicationAlgorithm {
 			nodeObj.set_timeout(450);
 			return 500;
 		}
-		
+
 		return 0;
 	}
 

@@ -1,6 +1,7 @@
 package cnss.simulator;
 
 import java.util.LinkedList;
+import java.util.Queue;
 
 import cnss.simulator.Event.EventType;
 import cnss.simulator.Packet.PacketType;
@@ -33,8 +34,8 @@ public class Node {
 	private String[] args;
 
 	// Events and global variables
-	private LinkedList<Event> inputEvents = new LinkedList<Event>();
-	private LinkedList<Event> outputEvents = new LinkedList<Event>();
+	private Queue<Event> inputEvents = new LinkedList<>();
+	private Queue<Event> outputEvents = new LinkedList<>();
 	private GlobalParameters parameters;
 	private int app_clock_tick_period = 0;
 	private int control_clock_tick_period = 0;
@@ -238,7 +239,7 @@ public class Node {
 		if (!has_app_delivery && !has_control_delivery)
 			return; // there are no packet deliver events
 
-		LinkedList<Event> newInputList = new LinkedList<Event>();
+		Queue<Event> newInputList = new LinkedList<>();
 		while (inputEvents.size() > 0) {
 			Event ev = inputEvents.poll();
 			if (ev.getOperation() == EventType.APP_TIMEOUT && has_app_delivery || ev.getOperation() == EventType.CONTROL_TIMEOUT && has_control_delivery) {
@@ -301,7 +302,7 @@ public class Node {
 					counter[RECV]++;
 					if (p.getType() == PacketType.DATA) {
 						next_app_timeout = 0; // cancels all waiting timeouts
-						app_alg.on_receive(now, p);
+						app_alg.on_receive(now, (DataPacket) p);
 					} else if (p.getType() == PacketType.CONTROL) {
 						next_control_timeout = 0; // cancels all waiting timeouts
 						control_alg.on_receive(now, p, ev.getInterface());
