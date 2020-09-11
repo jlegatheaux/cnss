@@ -4,6 +4,7 @@ import cnss.simulator.ApplicationAlgorithm;
 import cnss.simulator.DataPacket;
 import cnss.simulator.Node;
 import cnss.simulator.Packet;
+import cnss.simulator.DataPacket;
 
 public class SimpleNaifSwSender implements ApplicationAlgorithm {
 
@@ -41,7 +42,7 @@ public class SimpleNaifSwSender implements ApplicationAlgorithm {
 		log(now, "timeout");
 	}
 
-	public void on_receive(int now, Packet p) {
+	public void on_receive(int now, DataPacket p) {
 		log(now, " received ack message \"" + new String(p.getPayload()) + "\"");
 		if (counter < total) {
 			// send one more packet

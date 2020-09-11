@@ -4,6 +4,7 @@ import cnss.simulator.ApplicationAlgorithm;
 import cnss.simulator.DataPacket;
 import cnss.simulator.Node;
 import cnss.simulator.Packet;
+import cnss.simulator.DataPacket;
 
 public class SimpleNaifTCPReceiver implements ApplicationAlgorithm {
 
@@ -37,7 +38,7 @@ public class SimpleNaifTCPReceiver implements ApplicationAlgorithm {
 		log(now, "timeout");
 	}
 
-	public void on_receive(int now, Packet p) {
+	public void on_receive(int now, DataPacket p) {
 		counter++;
 		DataPacket ack = nodeObj.createDataPacket(p.getSource(), ("ACK " + Integer.toString(counter)).getBytes());
 		nodeObj.send(ack);

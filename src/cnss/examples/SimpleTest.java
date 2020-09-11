@@ -1,9 +1,9 @@
 package cnss.examples;
 
 import cnss.simulator.ApplicationAlgorithm;
-import cnss.simulator.DataPacket;
 import cnss.simulator.Node;
 import cnss.simulator.Packet;
+import cnss.simulator.DataPacket;
 
 public class SimpleTest implements ApplicationAlgorithm {
 
@@ -69,7 +69,7 @@ public class SimpleTest implements ApplicationAlgorithm {
 		log(now, "timeout");
 	}
 
-	public void on_receive(int now, Packet p) {
+	public void on_receive(int now, DataPacket p) {
 		log(now, "received app packet " + p);
 
 	}

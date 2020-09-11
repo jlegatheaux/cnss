@@ -4,6 +4,7 @@ import cnss.simulator.ApplicationAlgorithm;
 import cnss.simulator.DataPacket;
 import cnss.simulator.Node;
 import cnss.simulator.Packet;
+import cnss.simulator.DataPacket;
 
 public class SimpleSender implements ApplicationAlgorithm {
 
@@ -48,7 +49,7 @@ public class SimpleSender implements ApplicationAlgorithm {
 		log(now, "timeout");
 	}
 
-	public void on_receive(int now, Packet p) {
+	public void on_receive(int now, DataPacket p) {
 		log(now, " received echoed message \"" + new String(p.getPayload()) + "\"");
 	}
 

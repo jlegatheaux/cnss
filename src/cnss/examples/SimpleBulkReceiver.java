@@ -3,6 +3,7 @@ package cnss.examples;
 import cnss.simulator.ApplicationAlgorithm;
 import cnss.simulator.Node;
 import cnss.simulator.Packet;
+import cnss.simulator.DataPacket;
 
 public class SimpleBulkReceiver implements ApplicationAlgorithm {
 
@@ -35,7 +36,7 @@ public class SimpleBulkReceiver implements ApplicationAlgorithm {
 		log(now, "timeout");
 	}
 
-	public void on_receive(int now, Packet p) {
+	public void on_receive(int now, DataPacket p) {
 		String m = name + " received message with " + p.getSize() + " bytes";
 		log(now, m);
 

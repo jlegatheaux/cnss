@@ -3,6 +3,7 @@ package cnss.utils;
 import cnss.simulator.ApplicationAlgorithm;
 import cnss.simulator.Node;
 import cnss.simulator.Packet;
+import cnss.simulator.DataPacket;
 
 abstract public class AbstractApplicationAlgorithm implements ApplicationAlgorithm {
 
@@ -33,7 +34,7 @@ abstract public class AbstractApplicationAlgorithm implements ApplicationAlgorit
 		log(now, "timeout");
 	}
 
-	public void on_receive(int now, Packet p) {
+	public void on_receive(int now, DataPacket p) {
 		log(now, "received packet " + p);
 	}
 

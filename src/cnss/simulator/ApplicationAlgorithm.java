@@ -45,7 +45,7 @@ public interface ApplicationAlgorithm {
 	 * @param now the current virtual clock value
 	 * @param p   the packet received
 	 */
-	public void on_receive(int now, Packet p);
+	public void on_receive(int now, DataPacket p);
 
 	/**
 	 * Prints application state table(s) to the screen in a previously agreed

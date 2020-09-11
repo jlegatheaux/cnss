@@ -4,6 +4,7 @@ import cnss.simulator.ApplicationAlgorithm;
 import cnss.simulator.DataPacket;
 import cnss.simulator.Node;
 import cnss.simulator.Packet;
+import cnss.simulator.DataPacket;
 
 public class SimpleNaifSwReceiver implements ApplicationAlgorithm {
 
@@ -36,7 +37,7 @@ public class SimpleNaifSwReceiver implements ApplicationAlgorithm {
 		log(now, "timeout");
 	}
 
-	public void on_receive(int now, Packet p) {
+	public void on_receive(int now, DataPacket p) {
 		log(now, name + " received message with " + p.getSize() + " bytes");
 		DataPacket ack = nodeObj.createDataPacket(p.getSource(), ("ACK " + Integer.toString(counter)).getBytes());
 		nodeObj.send(ack);
