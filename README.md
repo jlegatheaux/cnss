@@ -139,7 +139,7 @@ Given a control packet from another node, here it isn+, process it. Parameter: *
 public void forward_packet(int now, Packet p, int iface);
 ```
 
-Given a packet destinated to another node, forward it to the appropriate interfaces by using the downcall *nodeObj.control_send(Packet p, int iface)*. Parameters are: *p* is the packet to forward, *iface* is the interface where this node received that packet. If it is not possible to forward the packet, deliver it using *nodeObj.control_send(Packet p, Node.UNKNOWN)*, since this way the *node* will correctly count all dropped packets.
+Given a packet destinated to another node, forward it to the appropriate interfaces by using the downcall *nodeObj.send(Packet p, int iface)*. Parameters are: *p* is the packet to forward, *iface* is the interface where this node received that packet. If it is not possible to forward the packet, deliver it using *nodeObj.send(Packet p, Node.UNKNOWN)*, since this way the *node* will correctly count all dropped packets.
 
 ```java
 public void on_link_up(int now, int iface);
@@ -167,7 +167,7 @@ The node processing steps control algorithm can use the following down calls:
 
 ```java
 nodeObj.send(DataPacket p)
-nodeObj.control_send(Packet p, int iface)
+nodeObj.send(Packet p, int iface)
 nodeObj.set_control_timeout(int t)
 
 nodeObj.createDataPacket (int receiver, byte[] payload)
