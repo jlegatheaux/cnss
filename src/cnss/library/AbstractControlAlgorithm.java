@@ -1,4 +1,4 @@
-package cnss.utils;
+package cnss.library;
 
 public class AbstractControlAlgorithm {
 

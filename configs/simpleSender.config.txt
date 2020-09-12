@@ -1,18 +1,16 @@
-# Simple tests of sending and receiving packets - not ready, revise nodes and links
+# Simple tests of sending and receiving packets
 
-parameter stop 300000   # 300 seconds = 5 minutes
+parameter stop 3000   # 3 seconds
 
-node 0 1 cnss.examples.EndSystemControl cnss.examples.SimpleSender
-node 1 2 cnss.examples.FloodingSwControl cnss.examples.EmptyApp
-node 2 1 cnss.examples.EndSystemControl cnss.examples.SimpleReceiver
+node 0 1 cnss.library.EndSystemControl cnss.examples.SimpleSender
+node 1 2 cnss.library.FloodingSwControl cnss.library.EmptyApp
+node 2 1 cnss.library.EndSystemControl cnss.examples.SimpleReceiver
 
 Link 0.0 1.0 1000000 50 0 0
 Link 1.1 2.0 1000000 50 0 0
 
-dumpappstate 21700 all
-dumppacketstats 21700 all
-
-
+dumpappstate 2700 all
+dumppacketstats 2700 all
 
 
 

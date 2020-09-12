@@ -1,4 +1,4 @@
-package cnss.utils;
+package cnss.library;
 
 import cnss.simulator.ApplicationAlgorithm;
 import cnss.simulator.Node;

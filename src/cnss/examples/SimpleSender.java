@@ -22,27 +22,16 @@ public class SimpleSender implements ApplicationAlgorithm {
 		nodeId = node_id;
 		nodeObj = mynode;
 		this.args = args;
-		log(0, "starting");
-		// my specific code
-		byte[] message = ("hello I am the " + name).getBytes();
-		DataPacket p = nodeObj.createDataPacket(2, message);
-		log(0, "sent packet " + p);
-		nodeObj.send(p);
-
-		DataPacket p1 = nodeObj.createDataPacket(3, new byte[10000]);
-		nodeObj.send(p1);
-		log(0, "sent big packet " + p1);
-
-		message = ("hello I am the " + name + " sending a third packet").getBytes();
-		p = nodeObj.createDataPacket(2, message);
-		log(0, "sent packet " + p);
-		nodeObj.send(p);
-
-		return 0;
+		log(0, "ping to node 1");
+		return 100;
 	}
 
 	public void on_clock_tick(int now) {
 		log(now, "clock tick");
+		byte[] message = ("hello I am the " + name).getBytes();
+		DataPacket p = nodeObj.createDataPacket(1, message);
+		log(0, "sent packet " + p);
+		nodeObj.send(p);
 	}
 
 	public void on_timeout(int now) {
