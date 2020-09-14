@@ -4,7 +4,10 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import cnss.simulator.Event.EventType;
+import cnss.simulator.Packet;
+import cnss.simulator.DataPacket;
 import cnss.simulator.Packet.PacketType;
+
 
 /**
  * The <code>Node</code> class represents a node in the network. Each node
@@ -107,7 +110,7 @@ public class Node {
 		int n1 = l.getNode(1);
 		int i2 = l.getInterface(2);
 		int n2 = l.getNode(2);
-		System.out.println("Link added to node " + node_id + " - " + l);
+		System.out.println("Added link to node " + node_id + " - " + l);
 		if (n1 == node_id) {
 			links[i1] = l;
 		} else if (n2 == node_id) {
@@ -302,7 +305,7 @@ public class Node {
 					counter[RECV]++;
 					if (p.getType() == PacketType.DATA) {
 						next_app_timeout = 0; // cancels all waiting timeouts
-						app_alg.on_receive(now, (DataPacket) p);
+						app_alg.on_receive(now, p.toDataPacket() );
 					} else if (p.getType() == PacketType.CONTROL) {
 						next_control_timeout = 0; // cancels all waiting timeouts
 						control_alg.on_receive(now, p, ev.getInterface());

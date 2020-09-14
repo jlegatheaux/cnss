@@ -14,6 +14,7 @@ public class SimpleReceiver implements ApplicationAlgorithm {
 
 	private String name = "simple receiver";
 	private boolean logOn = true;
+	private	int counter = 0;
 
 	public SimpleReceiver() {
 	}
@@ -22,7 +23,8 @@ public class SimpleReceiver implements ApplicationAlgorithm {
 		nodeId = node_id;
 		nodeObj = mynode;
 		this.args = args;
-		log(0, "starting");
+
+		log(now, "starting listening to pings");
 		return 0;
 	}
 
@@ -35,16 +37,16 @@ public class SimpleReceiver implements ApplicationAlgorithm {
 	}
 
 	public void on_receive(int now, DataPacket p) {
-		log(now, "received app packet " + p);
-		String m = name + " received message \"" + new String(p.getPayload()) + "\"";
-		log(now, m);
+	        counter++;
+		String msg = name + " received ping \"" + new String(p.getPayload()) + "\"";
+		log(now, msg);
 		// Reply to sender
-		DataPacket reply = nodeObj.createDataPacket(p.getSource(), m.getBytes());
+		DataPacket reply = nodeObj.createDataPacket(p.getSource(), msg.getBytes());
 		nodeObj.send(reply);
 	}
 
 	public void showState(int now) {
-		log(now, "no state to show");
+		log(now, "replyed to "+counter+" ping messages");
 	}
 
 	// auxiliary methods

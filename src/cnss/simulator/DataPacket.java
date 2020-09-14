@@ -1,12 +1,14 @@
 package cnss.simulator;
 
+import cnss.simulator.Packet;
+
 /**
  * The <code>ApplicationPacket</code> constructor. This is a subclass of the
  * packet super class and merely sets the packet type to DATA.
  */
 public class DataPacket extends Packet {
 	/**
-	 * <code>ApplicationPacket</code> constructor. Calls the super class and sets
+	 * <code>DataPacket</code> constructor. Calls the super class and sets
 	 * the type to DATA.
 	 * 
 	 * @param s  source address

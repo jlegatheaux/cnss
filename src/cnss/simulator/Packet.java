@@ -60,13 +60,13 @@ public class Packet {
 	 * @return a copy of the packet
 	 */
 	public Packet getCopy() {
-		byte[] copypl = new byte[this.payload.length];
+		byte[] copypl = new byte[payload.length];
 		System.arraycopy(this.payload, 0, copypl, 0, this.payload.length);
-		Packet copy = new Packet(this.src, this.dst, copypl);
-		copy.setType(this.type);
+		Packet copy = new Packet(src, dst, copypl);
+		copy.setType(type);
 		// copy.setPayload(copypl); because it is useless
-		copy.setTtl(this.ttl);
-		copy.setSequenceNumber(this.seq);
+		copy.setTtl(ttl);
+		copy.setSequenceNumber(seq);
 		// copy.setSize(this.getSize()); because it is useless
 		return copy;
 	}
@@ -186,10 +186,29 @@ public class Packet {
 	/**
 	 * Sets the current packet ttl
 	 * 
-	 * @param t the new ttl
+	 * @param int ttl to set
 	 */
-	private void setTtl(int t) {
-		ttl = t;
+	public void setTtl(int ttl) {
+		this.ttl = ttl;
+	}
+
+	/**
+	 * Returns the packet as a <code>DataPacket</code> Type
+	 * 
+	 * @param p is the packet to return
+	 * @return p as a DataPacket
+	 */
+	public DataPacket toDataPacket() {
+	    if ( type != PacketType.DATA ) {
+		System.err.println("toDataPacket: not a DataPacket");
+		System.exit(-1);
+	    }
+            byte[] copypl = new byte[payload.length];
+	    System.arraycopy(payload, 0, copypl, 0, payload.length);
+	    DataPacket copy = new DataPacket(src, dst, copypl);
+	    copy.setTtl(ttl);
+	    copy.setSequenceNumber(seq);
+	    return copy;    
 	}
 
 }

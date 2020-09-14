@@ -14,7 +14,9 @@ public class SimpleSender implements ApplicationAlgorithm {
 
 	private String name = "simple sender";
 	private boolean logOn = true;
+	private	int count = 0;
 
+    
 	public SimpleSender() {
 	}
 
@@ -22,15 +24,16 @@ public class SimpleSender implements ApplicationAlgorithm {
 		nodeId = node_id;
 		nodeObj = mynode;
 		this.args = args;
-		log(0, "ping to node 1");
-		return 100;
+
+		log(now, "starting ping to node 2");
+		return 400;
 	}
 
 	public void on_clock_tick(int now) {
-		log(now, "clock tick");
 		byte[] message = ("hello I am the " + name).getBytes();
-		DataPacket p = nodeObj.createDataPacket(1, message);
-		log(0, "sent packet " + p);
+		DataPacket p = nodeObj.createDataPacket(2, message);
+		count++;
+		log(now, "sent ping packet n. "+count+" - " + p);
 		nodeObj.send(p);
 	}
 
@@ -39,7 +42,7 @@ public class SimpleSender implements ApplicationAlgorithm {
 	}
 
 	public void on_receive(int now, DataPacket p) {
-		log(now, " received echoed message \"" + new String(p.getPayload()) + "\"");
+		log(now, " received ping reply message \"" + new String(p.getPayload()) + "\"");
 	}
 
 	public void showState(int now) {
