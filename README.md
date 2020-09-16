@@ -204,7 +204,7 @@ private boolean up;
 
 Besides these variables, links have two queues at each end: an *out queue* or output queue, and an *in queue* or input queue. At the end of each processing step, packets queued in the *out queues* of all links are consumed and become *delivery* events, associated with the other extreme of the link, to be delivered when the corresponding transit time ends. Transit times are computed using the time required to transmit the packet, as well as those in front of it in the same *out queue*, added to the propagation time.
 
-## Network definitian and simulation configuration file
+## Network definition and simulation configuration file
 
 To start a simulation, a *configuration file* must be given as parameter.
 
