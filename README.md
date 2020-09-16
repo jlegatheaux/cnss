@@ -3,10 +3,12 @@
 CNSS is written in Java and has been developed for teaching purposes.  
 
 CNSS was inspired by a simulator, developed around 2001, by Adam Greenhalgh from the University College of London. This simulator was
-mainly intended for testing routing algorithms based on the distance vector principle, and is limited to networks with zero transit
+mainly intended for testing routing algorithms based on the distance vector principle, and was limited to networks with zero transit
 time links. 
  
-CNSS is capable of simulating any routing algorithm, as well as simple applications running on heterogeneous nodes. To that end, CNSS leverages a more realistic notion of link, characterised by transmission and propagation delays as well as error rate. Morevoer, in CNSS a network can be comprised of different types of nodes, capable of executing user provided control and application algorithms, in a more generic fashion. To allow a link to simulate a logical link made of a set of links and packet switches, it is also possible to introduce jitter in a link if one so desires.
+CNSS is capable of simulating any routing algorithm, as well as simple applications running on heterogeneous nodes. To that end, CNSS leverages a more realistic notion of link, characterised by transmission and propagation delays as well as error rate. Morevoer, in CNSS a network can be comprised of different types of nodes, capable of executing user provided control and application algorithms, in a more generic fashion. 
+
+To allow a link to simulate a logical link made of a set of links and packet switches, it is also possible to introduce jitter in a link if one so desires.
 
 ## CNSS in short
 
