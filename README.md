@@ -368,7 +368,7 @@ public class Sender implements ApplicationAlgorithm {
 	}
 
 	public void showState(int now) {
-		System.out.println(name + " received "+count+" pings");
+		System.out.println(name + " received "+count+" replies to pings");
 	}
 
 	// auxiliary methods
@@ -429,7 +429,7 @@ public class Receiver implements ApplicationAlgorithm {
 	}
 
 	public void showState(int now) {
-		log(now, "replyed to "+counter+" ping messages");
+		System.out.println(name + " replyed to "+counter+" ping messages");
 	}
 
 	// auxiliary methods
@@ -630,8 +630,8 @@ log: sender time 6200 node 1  received reply "receiver received "ping 6""
 log: sender time 7000 node 1 sent ping packet n. 7 - src 1 dst 2 type DATA ttl 32 seq 7 size 26
 log: receiver time 7100 node 2 receiver received "ping 7"
 log: sender time 7200 node 1  received reply "receiver received "ping 7""
-sender received 7 pings
-log: receiver time 8000 node 2 replyed to 7 ping messages
+sender received 7 replies to pings
+receiver replyed to 7 ping messages
 Pkt stats for node 1 :  s 7 r 7 d 0 f 0
 (Node1:0 I1:0) s 7 r 7<-->(Node2:1 I2:0) s 7 r 7
 Pkt stats for node 2 :  s 7 r 7 d 0 f 0
