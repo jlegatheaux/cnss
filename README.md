@@ -317,7 +317,7 @@ This configuration file defines the network of the figure below. Two nodes, node
 ![alt text](https://github.com/jlegatheaux/cnss/Figures/simpleNet.config.png "A simple network with two application nodes and a switch")
 
 
-Class `Sender()` is a simple sender that sends a packet to the `Receiver()` every 1 second. Its `initialise(...)` method returns 1000, i.e. the value of the interval among clock ticks. Whenever it receives a packet, it prints its value using the method `log(...)`. Whenever it receives a *dumpAppState* event, the node kernel calls the `showState()`upcall and it prints the numbers of reply packets received.
+Class `Sender()` is a simple sender that sends a packet to the `Receiver()` every second. Its `initialise(...)` method returns 1000, i.e. the value of the interval among clock ticks. Whenever it receives a packet, it prints its value using the method `log(...)`. Whenever it receives a *dumpAppState* event, the node kernel calls the `showState()`upcall and it prints the numbers of reply packets received.
 
 ```Java
 package cnss.examples;
