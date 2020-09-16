@@ -58,15 +58,15 @@ The definition of the interfaces of the two algorithms executed by nodes are pre
 
 ## ApplicationAlgorithm Interface
 
-The ApplicationAlgorithm interface should be implemented by any class whose instances are intended to implement application automata executed by nodes. The class that implements this algorithm must have a zero argument constructor. All methods have, as first argument, the virtual time of the processing step where the event fired. Methods:
+The `ApplicationAlgorithm interface should be implemented by any class whose instances are intended to implement application automata executed by nodes. The class that implements this algorithm must have a zero argument constructor. All methods have, as first argument, the virtual time of the processing step where the event fired. Methods:
 
 ```java
 public int initialise(int now, int node_id, Node nodeObj, String[] args);
 ```
 
-Initialises the application algorithm or automaton and returns the desired *control_clock_tick_period*. If the returned *control_clock_tick_period == 0*, no **clock_ticks** will be delivered to the algorithm.
+Initialises the application algorithm or automaton and returns the desired *control_clock_tick_period*. If the returned *control_clock_tick_period is equal to 0*, no clock_ticks will be delivered to the algorithm.
 
-Parameters: *id* is this node id, *nodeObj* is a reference to the node object executing this algorithm, *args* is an array of arguments specified in the *configuration file*  (see the configuration file section). 
+Parameters: `id` is this node id, `nodeObj` is a reference to the node object kernel executing this algorithm, `args` is an array of arguments specified in the *configuration file*  (see the configuration file section). 
 
 ```java
 public void on_clock_tick(int now);
@@ -84,13 +84,13 @@ Signals a timeout event.
 public void on_receive(int now, DataPacket p);
 ```
 
-Given a data packet from another node, here it is and process it. Parameter: *p* the received packet.
+Given a data packet from another node, here it is and process it. Parameter: `p` the received packet.
 
 ```java
 public void showState(int now);
 ```
 
-Prints application state table(s) to the screen in a previously agreed format of users of a simulation. This up call is called at each time step where there is a correspondent event directed to the node, see the section on the configuration file.
+Prints application state table(s) to the screen in a previously agreed format of users of a simulation. This up call is called at each time step where there is a correspondent event directed to the node. See the section on the configuration file.
 
 The node processing steps application algorithm can use public methods of the class DataPacket as well as the following down calls:
 
@@ -100,12 +100,12 @@ nodeObj.send(DataPacket p)
 nodeObj.set_timeout(int t)
 ```
 
-When a packet is directly created, its sequence number is 0. In order to guarantee that packet sequence numbers are different (relative to each node), packets must be created using *nodeObj.createDataPacket(…)* method, which takes care of providing unique sequence numbers.
+When a packet is directly created, its sequence number is 0. In order to guarantee that packet sequence numbers are different (relative to each node), packets must be created using `nodeObj.createDataPacket(…)` method, which takes care of providing unique sequence numbers.
 
 
 ## ControlAlgorithm Interface
 
-The ControlAlgorithm interface should be implemented by any class whose instances are intended to implement a control automata executed by nodes, for example, the way the node routes packets not directed to himself. The ControlAlgorithm interface should be implemented by any class whose instances are intended to implement the control part of the node. The class that implements this algorithm must have a zero argument constructor. All upcall methods have as first argument the virtual time of the processing step where the event fired. First are apresented some of the interface constants then the methods.
+The `ControlAlgorithm` interface should be implemented by any class whose instances are intended to implement a control automata executed by nodes, for example, the way the node routes packets not directed to himself. The `ControlAlgorithm` interface should be implemented by any class whose instances are intended to implement the control part of the node. The class that implements this algorithm must have a zero argument constructor. All upcall methods have as first argument the virtual time of the processing step where the event fired. First are apresented some of the interface constants, and then the methods.
 
 ```java
 static final int LOCAL = Node.LOCAL;       // the number of the virtual loop back interface
@@ -115,9 +115,9 @@ static final int UNKNOWN = Node.UNKNOWN;   // means an inexistent or unknown int
 ```java
 public int initialise(int now, int node_id, Node nodeObj, GlobalParams parameters, Link[] links, int nint);
 ```	
-Initializes the control algorithm and returns the desired *control_clock_tick_period*. If the returned *control_clock_tick_period == 0*, no **clock_ticks** will be submitted to the algorithm. Interfaces are numbered 0 to *nint-1*. Each has a link attached: *links[i]*. Interface *LOCAL* with value -1, is virtual and denotes, when needed, the local loop interface. 
+Initializes the control algorithm and returns the desired *control_clock_tick_period*. If the returned *control_clock_tick_period is equal to 0*, no **clock_ticks** will be delivered to the algorithm. Interfaces are numbered 0 to `nint-1`. Each has a link attached: `links[i]`. Interface `LOCAL`, with value -1, is virtual and denotes, when needed, the local loop interface. 
 
-Parameters: *id* is this node id, *nodeObj* is a reference to the node object executing this algorithm, *parameters* is the collection of global parameters (see the configuration file section), *links* is the nodes links array, *nint* is the number of interfaces (or links) of this node. The method must return the requested *clock_tick_period* value. 
+Parameters: `id` is this node id, `nodeObj` is a reference to the node kernel object executing this algorithm, `parameters` is the collection of global parameters (see the configuration file section), `links` is the nodes links array, `nint` is the number of interfaces (or links) of this node. The method must return the requested *clock_tick_period* value. 
 
 ```java
 public void on_clock_tick(int now);
@@ -134,21 +134,21 @@ Signals a timeout event.
 public void on_receive(int now, Packet p);
 ```
 
-Given a control packet from another node, here it isn+, process it. Parameter: *p* the packet received.
+Given a control packet from another node, here it is, process it. Parameter: `p` the packet received.
 
 	
 ```java
 public void forward_packet(int now, Packet p, int iface);
 ```
 
-Given a packet destinated to another node, forward it to the appropriate interfaces by using the downcall *nodeObj.send(Packet p, int iface)*. Parameters are: *p* is the packet to forward, *iface* is the interface where this node received that packet. If it is not possible to forward the packet, deliver it using *nodeObj.send(Packet p, Node.UNKNOWN)*, since this way the *node* will correctly count all dropped packets.
+Given a packet destinated to another node, forward it to the appropriate interfaces by using the downcall `nodeObj.send(Packet p, int iface)`. Parameters are: `p` is the packet to forward, `iface` is the interface where this node received that packet. If it is not possible to forward the packet, deliver it using `nodeObj.send(Packet p, Node.UNKNOWN)`, since this way the `node` will correctly count all dropped packets.
 
 ```java
 public void on_link_up(int now, int iface);
 public void on_link_down(int now, int iface);
 ```
 
-Signals a link up or down event. Parameter: *iface* the interface (link) that changed state.
+Signals a link up or down event. Parameter: `iface` the interface (link) that changed state.
 
 
 ```java
@@ -186,13 +186,13 @@ class Node (*)
 class Parameters (*)
 ```
 
-(*) while b+never using public methods taht write the state of these objects.
+(*) but never using public methods that write the state of these objects.
 
-When a packet is created its sequence number is 0. In order to guarantee that packet sequence numbers are different (relative to each node), packets must be created using *nodeObj.createDataPacket(…)* and *nodeObj.createControlPacket(...)* methods, which take care of providing unique sequence numbers. Therefore, this algorithm must avoid creating packets directly when maintaining packets sequence numbers uniqueness is important.
+When a packet is created, its sequence number is 0. In order to guarantee that packet sequence numbers are different (relative to each node), packets must be created using `nodeObj.createDataPacket(…)` and `nodeObj.createControlPacket(...)` methods, which take care of providing unique sequence numbers. Therefore, this algorithm must avoid creating packets directly when maintaining packets sequence numbers uniqueness is important.
 
 ## Links
 
-The model of links is very simple: a link is point to point (connects exactly two nodes) and has two extremes, end 1 and end 2, each directly connected to one interface in a (different) node. Links are charactetized by:
+The model of links is very simple: a link is point to point (connects exactly two nodes) and has two extremes, end 1 and end 2, each directly connected to one interface in a (in general different) node. Links are charactetized by:
 
 ```java
 private long bwidth = 1000;  // in bits per second - bps
@@ -211,17 +211,17 @@ To start a simulation, a *configuration file* must be given as parameter.
 ```
 java -cp bin cnss.simulator.Simulafor config.txt
 ```
-Virtual time is in milliseconds, starts at 0 and ends at value that can be changed in the configuration file. Its limit is *Integer.MAXVALUE* which corresponds to around 2000000 (two million) seconds or more or less 555 hours of virtual time.
+Virtual time is in milliseconds, starts at 0 and ends at a value that can be changed in the configuration file. Its limit is *Integer.MAXVALUE* which corresponds to around two million seconds or more or less 555 hours of virtual time.
 
 ### The configuration file is made of lines
 
-These lines obey a simple syntax. In the current version tokens must be separated by exactly one space chracter. The different possible configuration file lines are the following.
+These lines obey a simple syntax. In the current version, tokens must be separated by exactly one space chracter. The different possible configuration file lines are the following.
 
 ```
 parameter name value 
 ```
 
-Defines a global parameter of name _name_ and value _value_ (both are character strings without any blanck character in the middle); global parameters are accessible to nodes’ ControlAlgorithms as a collection of name / value pairs accessible via an hash map collection.
+Defines a global parameter of name _name_ and value _value_ (both are character strings without any blanck character in the middle); global parameters are accessible to nodes ControlAlgorithms as a collection of name / value pairs accessible via an hash map collection.
 
 Examples:
 ```
