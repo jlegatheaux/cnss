@@ -254,9 +254,9 @@ Example:
 link 0.0 1.0 10000000 10 0.0 0.0 down
 ```
 
-introduces a link from interface 0 of node 0 to interface 0 of node 1 with 10 Mbps bit rate, 0.0 error rate, 0.0 jitter and starting in state down.
+introduces a link from interface 0 of node 0 to interface 0 of node 1 with a 10 Mbps bit rate, 0.0 error rate, 0.0 jitter and starting in state down.
 
-The configuration file can also introduce several type of events to be fired at given time steps. The general syntax is *event_name time_of_event event_parameters*. Here are examples of the possible ones. 
+The configuration file can also introduce several types of events to be fired at given time steps. The general syntax is *event_name time_of_event event_parameters*. Here are examples of the possible ones. 
 
 ```
 traceroute 12000 origin_node destination_node
@@ -279,41 +279,395 @@ The *uplink / downlink* ones delivers an *uplink event or a down link event* at 
 
 The *dumpcontrolstate* one delivers a *dumpcontrolstate event* at *time = 8000* to the *Control Algorithm* of all nodes or to a specific one.
 
-Finally, a line strating with ´#´is considered a *comment*.
+Finally, a line starting with ´#´is considered a *comment*.
 
-In the configuration file, in the first token or command, character case is not relevant. For example, writing 'node' or writing 'NoDe' is produces the same result.
+In the configuration file, in the first token or command, character case is not relevant. For example, writing 'node' or writing 'NoDe' produces the same result. The same is true for events to be fired. 'dumpPacketStats' or 'dumppacketstats' produces the same result. It is also possible to use underscrores as separators while writing events names, as shown in the table below, where each row shows equivalent forms of the same token.
+
+| Original name        | Using case to highlight | Using underscores        |
+| -------------------- |-------------------------| -------------------------|
+| dumpappstate         | DumpAppState            | dump_app_state           |
+| dumproute            | DumpRoute               | dump_route               |
+| dumppacketstats      | dumpPacketStats         | dump_packet_stats        |
+| dumpcontrolstate     | DumpControlState        | dump_control_state       |
+
 
 ## Example of a configuration file
 
 ```
-# Miscellaneous simple test
+# Simple network: 2 nodes and one switch
 
-parameter stop 3000   # 3 seconds
+parameter stop 8000   # 8 seconds
 
-node 0 4 cnss.examples.FloodingSwControl cnss.examples.EmptyApp hello world
-node 1 1 cnss.examples.EndSystemControl cnss.examples.SimpleTest
-node 2 1 cnss.examples.EndSystemControl cnss.examples.SimpleTest
-node 3 1 cnss.examples.EndSystemControl cnss.examples.SimpleTest
-node 4 1 cnss.examples.EndSystemControl cnss.examples.SimpleTest 
+node 0 2 cnss.library.FloodingSwitch cnss.library.EmptyApp
+node 1 1 cnss.library.EndSystemControl cnss.examples.Sender
+node 2 1 cnss.library.EndSystemControl cnss.examples.Receiver
 
-Link 0.0 1.0 1000000 50 0.0 0.0
-Link 0.1 2.0 1000000 50 0.0 0.0
-Link 0.2 3.0 1000000 50 0.0 0.0
-Link 0.3 4.0 1000000 50 0.0 0.0
+Link 0.0 1.0 1000000 50 0 0
+Link 0.1 2.0 1000000 50 0 0
 
-dumppacketstats 2900 all
+dumpAppState 8000 all
+dumpPacketStats 8000 1
+dumpPacketStats 8000 2
 ```
 
-This configuration file defines the star network decpited in the figura below. The configuration file schedules events *dumppcketstats* to be delivered to all nodes at simultaion time = 2900. The code of the different classes is shown below, as well as the output of the simulation execution.
+This configuration file defines the network of the figure below. Two nodes, node 1 and 2, are connected to a switch, node 0. Links have 1 Mbps bandwidth and 50 ms of propagation time. The configuration file sets the end of the simulation to 8000 ms and schedules events *dump_app_state* to be delivered to all nodes, and events *dump_packet_stats* to be sent to nodes 1 and 2, all at simulation time = 8000, the end of the simulation. The code of the different classes is shown below, as well as the output of the simulation execution.
+
+![alt text](https://github.com/jlegatheaux/cnss/Figures/simpleNet.config.png "A simple network with two application nodes and a switch")
 
 
+Class `Sender()` is a simple sender that sends a packet to the `Receiver()` every 1 second. Its `initialise(...)` method returns 1000, i.e. the value of the interval among clock ticks. Whenever it receives a packet, it prints its value using the method `log(...)`. Whenever it receives a *dumpAppState* event, the node kernel calls the `showState()`upcall and it prints the numbers of reply packets received.
+
+```Java
+package cnss.examples;
+
+import cnss.simulator.ApplicationAlgorithm;
+import cnss.simulator.DataPacket;
+import cnss.simulator.Node;
+import cnss.simulator.Packet;
+import cnss.simulator.DataPacket;
+
+public class Sender implements ApplicationAlgorithm {
+
+	private Node nodeObj;
+	private int nodeId;
+	private String[] args;
+
+	private String name = "sender";
+	private boolean logOn = true;
+	private	int count = 0;
+
+    
+	public Sender() {
+	}
+
+	public int initialise(int now, int node_id, Node mynode, String[] args) {
+		nodeId = node_id;
+		nodeObj = mynode;
+		this.args = args;
+
+		log(now, "starting pings");
+		return 1000;
+	}
+
+	public void on_clock_tick(int now) {
+		count++;
+		byte[] message = ("ping "+count).getBytes();
+		DataPacket p = nodeObj.createDataPacket(2, message);
+		log(now, "sent ping packet n. "+count+" - " + p);
+		nodeObj.send(p);
+	}
+
+	public void on_timeout(int now) {
+		log(now, "timeout");
+	}
+
+	public void on_receive(int now, DataPacket p) {
+		log(now, " received reply \"" + new String(p.getPayload()) + "\"");
+	}
+
+	public void showState(int now) {
+		System.out.println(name + " received "+count+" pings");
+	}
+
+	// auxiliary methods
+
+	private void log(int now, String msg) {
+		if (logOn)
+			System.out.println("log: " + name + " time " + now + " node " + nodeId + " " + msg);
+	}
+
+}
+```
+Class `Receiver()` implements the receiver node algorithm, one that only prints the contents of each received packet and replies to the sender, mirroring a *ping reply*. It also prints the number of received messages when it receives a *dump_app_stat* event signaled via a `showState()` upcall.
+
+```java
+package cnss.examples;
+
+import cnss.simulator.ApplicationAlgorithm;
+import cnss.simulator.DataPacket;
+import cnss.simulator.Node;
+
+public class Receiver implements ApplicationAlgorithm {
+
+	private Node nodeObj;
+	private int nodeId;
+	private String[] args;
+
+	private String name = "receiver";
+	private boolean logOn = true;
+	private	int counter = 0;
+
+	public Receiver() {
+	}
+
+	public int initialise(int now, int node_id, Node mynode, String[] args) {
+		nodeId = node_id;
+		nodeObj = mynode;
+		this.args = args;
+
+		log(now, "started listening");
+		return 0;
+	}
+
+	public void on_clock_tick(int now) {
+		log(now, "clock tick");
+	}
+
+	public void on_timeout(int now) {
+		log(now, "timeout");
+	}
+
+	public void on_receive(int now, DataPacket p) {
+	    counter++;
+		String msg = name + " received \"" + new String(p.getPayload()) + "\"";
+		log(now, msg);
+		// Reply to sender
+		DataPacket reply = nodeObj.createDataPacket(p.getSource(), msg.getBytes());
+		nodeObj.send(reply);
+	}
+
+	public void showState(int now) {
+		log(now, "replyed to "+counter+" ping messages");
+	}
+
+	// auxiliary methods
+
+	private void log(int now, String msg) {
+		if (logOn)
+			System.out.println("log: " + name + " time " + now + " node " + nodeId + " " + msg);
+	}
+
+}
+```
+The example also illustrates how control algorithms can be used to forward packets. Class `EndSystemControl()` implements packet forwarding in a node with one only interface. If the interface from which the packet came is the local interface, and the node interface is up, the packet is forwarded to the node interface, i.e. the one that is not the local loop one. The node kernel only calls the upcall `forward_packet()` of the control algorithm to forward a packet whose destination is not the local node, thus, it is useless to test if the destination of the packet os not the node itself. 
+
+Whenever it is not possible to forward the packet, for example because the interface is down, the downcall `send()` is still called with `UNKNOWN` as the value of the interface used to forward the packet. This allows the node kernel to count dropped packets. If `tracingOn == true`, the algorithm prints a trace of its execution to help the simulation users to understand what is going on.
+
+Class `EndSystemControl()` can only adequately forward packets of node using a kind of *default route*, i.e. with one only interface. Therefore, during its initialization, it tests this condition to avoid simulation users the trouble of using this control inadequately. This method also `returns 0` since this control does not requires the use of periodic clock ticks.
+
+```java
+package cnss.library;
+
+// the control (routing) of an end system with one only interface
+
+import cnss.simulator.ControlAlgorithm;
+import cnss.simulator.GlobalParameters;
+import cnss.simulator.Link;
+import cnss.simulator.Node;
+import cnss.simulator.Packet;
+
+public class EndSystemControl implements ControlAlgorithm {
+	
+	private Node nodeObj;
+	private int nodeId;
+	private GlobalParameters parameters;
+	private Link[] links;
+	private int numInterfaces;
+	private String name="end system";
+	private boolean tracingOn = false;
+
+	public EndSystemControl() {
+		
+	}
+
+	public int initialise(int now, int node_id, Node mynode, GlobalParameters parameters, Link[] links, int nint) {
+		if ( nint > 1 ) {
+			tracingOn = true;
+			trace(now,"end system has more than one interface");
+			System.exit(-1);
+		}
+		nodeId = node_id;
+		nodeObj = mynode;
+		this.parameters=parameters;
+		this.links=links;
+		numInterfaces=nint;
+		return 0;
+	}
+	
+	
+	public void on_clock_tick(int now) {
+		trace(now,"clock tick");
+	}
+	
+	public void on_timeout(int now) {
+		trace(now,"timeout");
+	}
+	
+	public void on_link_up(int now, int iface) {
+		trace(now,iface+" link up");
+	}
+	
+	public void on_link_down(int now, int iface) {
+		trace(now,iface+" link down");
+	}
+	
+	public void on_receive(int now, Packet p, int iface) {
+		trace(now,"received control packet");
+	}
+	
+	public void forward_packet(int now, Packet p, int iface) {
+		if ( iface == LOCAL && links[0].isUp() ) { // locally sent packet
+		    // always sends a copy, not the Packet object itself
+		    nodeObj.send(p.getCopy(),0);
+			trace(now, "forwarded a locally sent packet");
+			return;
+		} 
+		if ( iface == LOCAL && ! links[0].isUp() ) {
+			nodeObj.send(p,UNKNOWN);
+			trace(now, "network interface is down");
+			return;
+		}
+		// allows the node to count dropped packets
+		nodeObj.send(p,UNKNOWN);
+	}
+
+	public void showControlState(int now) {
+		trace(now,"has no state to show");
+	}
+	
+	public void showRoutingTable(int now) {
+		trace(now,"has no routing table to show");
+	}
+
+	// auxiliary methods
+	
+	private void trace (int now, String msg) {
+		if ( tracingOn ) System.out.println("-- trace: "+name+" time "+now+" node "+nodeId+" "+msg);
+	}
+}
+```
+
+Class *FloodingSwitch* is another example a control algorithm. This one implements a flooding switch and therefore can only be used in a network without cycles. Most of its upcall methods are identical to the ones of the previous algorthm but the upcall *forward_packet*. All identical methods are not shown.
+
+Method `initialise()` does not tests the number of interfaces of the node and also `returns 0`. The upcall `forward_packet()` does the flood, i.e. it sends a copy of the packet to all interfaces of the node in state is *up* but the one from which the packet come. 
+
+Both control algorithms shown always send a copy of the packet to be forwarded, not the packet object itself. Sending the object may introduce hard to debubg errors. That would be more error prone in this case since the algorithm implements a real flood.
+
+If this control algorithm is used in a network with cycles, a broadcast storm of duplicte packets would arise. The EndSystem control algorithm only forwards locally sent packets (`interface == LOCAL`) and therefore drops packets received by the node whose destination is not the local node.
+
+```java
+
+public class FloodingSwitch implements ControlAlgorithm {
+
+	private Node nodeObj;
+	private int nodeId;
+	private GlobalParameters parameters;
+	private Link[] links;
+	private int numInterfaces;
+	private String name = "flooding switch control: ";
+	private boolean tracingOn = false;
+
+	public FloodingSwitch() {
+	}
+
+	public int initialise(int now, int node_id, Node mynode, GlobalParameters parameters, Link[] links, int nint) {
+		nodeId = node_id;
+		nodeObj = mynode;
+		this.parameters = parameters;
+		this.links = links;
+		numInterfaces = nint;
+		return 0;
+	}
+
+	public void forward_packet(int now, Packet p, int iface) {
+		int copiesSent = 0;
+		// do the flood
+		for (int i = 0; i < links.length; i++) {
+			if (i != iface && links[i].isUp()) {
+			    // always send a copy of p, not the object itself
+			    nodeObj.send(p.getCopy(), i);
+			    copiesSent++;
+			}
+		}
+		if (copiesSent == 0) { // allows the node to count dropped packets
+			nodeObj.send(p, UNKNOWN);
+		}
+		trace(now, "forwarded " + copiesSent + " packet copies");
+	}
+
+}
+```
+Class `EmptyApp` is not shown. This application algorithm does nothing and is provided in the library to be used as application algorithm of switches that do not run any application.
+
+Below, the result of the simulation is shown. 
+
+```
+java -cp bin cnss.simulator.Simulator configs/simpleNet.config.txt 
+Loading configuration : configs/simpleNet.config.txt
+Reading file configs/simpleNet.config.txt
+Created Node 0: 2 interf.s, ctr code: cnss.library.FloodingSwitch app code: cnss.library.EmptyApp
+Created Node 1: 1 interf.s, ctr code: cnss.library.EndSystemControl app code: cnss.examples.Sender
+Created Node 2: 1 interf.s, ctr code: cnss.library.EndSystemControl app code: cnss.examples.Receiver
+Added link to node 0 - Link (Node1:0 I1:0)<-->(Node2:1 I2:0) bwd: 1000000 bps lat: 50 ms error %: 0.0 jit %: 0.0 up
+Added link to node 1 - Link (Node1:0 I1:0)<-->(Node2:1 I2:0) bwd: 1000000 bps lat: 50 ms error %: 0.0 jit %: 0.0 up
+Added link to node 0 - Link (Node1:0 I1:1)<-->(Node2:2 I2:0) bwd: 1000000 bps lat: 50 ms error %: 0.0 jit %: 0.0 up
+Added link to node 2 - Link (Node1:0 I1:1)<-->(Node2:2 I2:0) bwd: 1000000 bps lat: 50 ms error %: 0.0 jit %: 0.0 up
+
+simulation starts - first processing step with clock = 0
+
+log: sender time 0 node 1 starting pings
+log: receiver time 0 node 2 started listening
+log: sender time 1000 node 1 sent ping packet n. 1 - src 1 dst 2 type DATA ttl 32 seq 1 size 26
+log: receiver time 1100 node 2 receiver received "ping 1"
+log: sender time 1200 node 1  received reply "receiver received "ping 1""
+log: sender time 2000 node 1 sent ping packet n. 2 - src 1 dst 2 type DATA ttl 32 seq 2 size 26
+log: receiver time 2100 node 2 receiver received "ping 2"
+log: sender time 2200 node 1  received reply "receiver received "ping 2""
+log: sender time 3000 node 1 sent ping packet n. 3 - src 1 dst 2 type DATA ttl 32 seq 3 size 26
+log: receiver time 3100 node 2 receiver received "ping 3"
+log: sender time 3200 node 1  received reply "receiver received "ping 3""
+log: sender time 4000 node 1 sent ping packet n. 4 - src 1 dst 2 type DATA ttl 32 seq 4 size 26
+log: receiver time 4100 node 2 receiver received "ping 4"
+log: sender time 4200 node 1  received reply "receiver received "ping 4""
+log: sender time 5000 node 1 sent ping packet n. 5 - src 1 dst 2 type DATA ttl 32 seq 5 size 26
+log: receiver time 5100 node 2 receiver received "ping 5"
+log: sender time 5200 node 1  received reply "receiver received "ping 5""
+log: sender time 6000 node 1 sent ping packet n. 6 - src 1 dst 2 type DATA ttl 32 seq 6 size 26
+log: receiver time 6100 node 2 receiver received "ping 6"
+log: sender time 6200 node 1  received reply "receiver received "ping 6""
+log: sender time 7000 node 1 sent ping packet n. 7 - src 1 dst 2 type DATA ttl 32 seq 7 size 26
+log: receiver time 7100 node 2 receiver received "ping 7"
+log: sender time 7200 node 1  received reply "receiver received "ping 7""
+sender received 7 pings
+log: receiver time 8000 node 2 replyed to 7 ping messages
+Pkt stats for node 1 :  s 7 r 7 d 0 f 0
+(Node1:0 I1:0) s 7 r 7<-->(Node2:1 I2:0) s 7 r 7
+Pkt stats for node 2 :  s 7 r 7 d 0 f 0
+(Node1:0 I1:1) s 7 r 7<-->(Node2:2 I2:0) s 7 r 7
+log: sender time 8000 node 1 sent ping packet n. 8 - src 1 dst 2 type DATA ttl 32 seq 8 size 26
+
+simulation ended - last processing step with clock = 8000
+```
+
+In the forst lines, the processing of the configuration file contents is shown, namely the creation of nodes and the instalation of links. Now, the simulation starts. At the first clock tick a first packet is sent, 50 ms later ir gets to the destination, the receiver replies and more 50 ms later the reply gets to the sender. The packet has a size of 26 bytes (20 for the header as in IP and 6 to represent the value of the counter (as a character string). The origin and destination nodes as well as the sequence number and the original value of the TTL are also shown.
+
+At the last processing step, when the value of the clock is 8000, nodes reveive the events shown in the configuration file. Only the sender shows its state, the receiver and the switch have nothing to show. After, all nodes print the number of packets sent and received as well as the number of packets sent and received through each of its links. Each of the sender and receiver nodes sent and received 7 packets and these packets were also sent and received by their links. It is also noted that these links never droped or forwarded packets. It is interesting to note that the sender still sends a new packet during this processing step, but as this happens after the execution of the `show status` upcalls, this packet is not considered by nodes and links counters.
+
+As the reader can realize, the shown application algorithms are build as classes that implement the `ApplicationAlgorithm()` interface. That way the code shows all the required details. Package `library` also contains two abstract classes, `AbstractApplicationAlgorithm()` and   `AbstractControlAlgorithm()`. Theses classe may be used to write application and control algorithms that extend them, what results in a more concise code style. For example, using the `AbstractApplicationAlgorithm` the `Sender()` class could become (without counting the number of packets sent and ignoring the replies.
+
+```java
+import java.util.Arrays;
+import cnss.simulator.*;
+import cnss.utils.*;
+
+public class Sender extends AbstractApplicationAlgorithm {
+
+  public SenderNode() {
+      super(true, "sender");
+  }
+
+  public int initialise(int now, int node_id, Node self, String[] args) {
+    super.initialise(now, node_id, self, args);
+		return 1000;
+	}
+
+  public void on_clock_tick(int now) {
+      self.send(self.createDataPacket( 1, new byte[0]));
+  }
+} 
+```
 
 
-
-
-FIGURE
-
-At time 0 the simulation starts and ends at time 3000.
 
 
 
