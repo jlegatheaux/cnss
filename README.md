@@ -30,7 +30,7 @@ Next, packets, nodes, links and the configuration file are presented in more det
 
 ## Packets
 
-Packets are objects of the class *Packet*. This class has several subclasses among which *DataPacket* and *ControlPacket* that represent different types of packets. Data packets are sent and received by the ApplicationAlgorithm part of the nodes. Control packets are sent and received by the ControlAlgorithm part of the nodes. In fact, by analogy, these two types of packets could also be understood as if CNSS supports two fixed IP ports. One addressing a traditional OS kernel, and the other addressing the single application running in the node. 
+Packets are objects of the class *Packet*. This class has several subclasses among which *DataPacket* and *ControlPacket* that represent different types of packets. Data packets are sent and received by ApplicationAlgorithms. Control packets are sent and received by the ControlAlgorithms. In fact, by analogy, these two types of packets could also be understood as if CNSS supports two fixed IP ports. One addressing a traditional OS kernel, and the other addressing a single application running in the node. 
 
 Packets have several fields, namely: 
 
