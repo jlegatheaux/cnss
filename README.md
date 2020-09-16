@@ -20,7 +20,7 @@ Nodes exchange packets.
 
 In each clock tick, all nodes execute a processing step by consuming the events scheduled to them for this processing step. These events may be clock ticks, alarms or packet deliveries to the node. The execution of a processing step in each node may generate future events like alarms, delivery of messages to the same or other nodes, etc.
 
-Nodes execute a common kernel that triggers processing steps execution using up calls to the methods of two algorithms defined by the users: a control algorithm and an applications algorithm. These algorithms may be different in each node. These up calls processing steps can send messages, set alarms, etc. to the nodes algorithms. The system imposes that the execution of each node is structured as the execution of two automata: a control automaton controlled by the control algorithm, and an application automaton controlled by the application algorithm.
+Nodes execute a common kernel that triggers processing steps execution using up calls to the methods of two algorithms defined by the users: a control algorithm and an application algorithm. These algorithms may be different in each node. These up calls processing steps can send messages, set alarms, etc. to the nodes algorithms using interfaces downcalls. The system imposes that the execution of each node is structured as the execution of two automata: a control automaton controlled by the control algorithm, and an application automaton controlled by the application algorithm.
 
 Network configuration is defined by a configuration file using simple commands to add nodes and links and their parameters, as well as special events that can be triggered at configuration defined virtual time values.
 
