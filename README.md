@@ -50,11 +50,11 @@ Some contants in the Packet class have speacial meaning for the CNSS notion of P
 
 Nodes execute two algorithms, an application algorithm and a control algorithm. Each of these algorithms is structured as an automaton executing actions associated with a pre-defined set of events, each one called an **upcall**.
 
-Among the most important upcalls are: *initialise(int now, ...)*, *on_clock_tick(int now)*, *on_receive(int now, DataPacket p)*, *on_timeout(int now)* and several others. Nodes automata may choose to use *clock_ticks*, if so, their periodic value in millisecends should be returned by the *initialise(...)* upcal. If the *initialise* method returns 0, no *clock_ticks* will be delivered to this algorithm.
+Among the most important upcalls are: `initialise(int now, ...), on_clock_tick(int now), on_receive(int now, DataPacket p), on_timeout(int now)` and several others. Nodes automata may choose to use *clock_ticks*, if so, their periodic value in millisecends should be returned by the `initialise(...)` upcal. If the `initialise` method returns 0, no *clock_ticks* will be delivered to this algorithm.
 
-Each upcall, but the *initialise* one, is triggered by the delivery of an event that got to the node. All events that should be triggered in the same processig step (characterized by the same value of the *clock*) are delivered in sequence without any predefineded specified order. 
+Each upcall, but the `initialise` one, is triggered by the delivery of an event that got to the node. All events that should be triggered in the same processig step (characterized by the same value of the *clock*) are delivered in sequence without any predefineded specified order. 
 
-The definition of the interfaces of the two algorithms executed by a node are presented below.
+The definition of the interfaces of the two algorithms executed by nodes are presented next.
 
 ## ApplicationAlgorithm Interface
 
