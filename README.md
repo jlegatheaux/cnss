@@ -227,7 +227,7 @@ Examples:
 ```
 parameter stop 100000  
 ```
-This parameter defines the duration of simulation in virtual ms; it is good practice to make this the first line of the config file; this first parameter is directly recognized by the simulator.
+This parameter defines the duration of the simulation in virtual ms. It is good practice to make this the first line of the config file; this first parameter is directly recognized by the simulator.
 
 ```
 parameter splithorizon true
@@ -237,10 +237,10 @@ parameter expiration true
 which can be used to parametrize the control algorithms.
 
 ```
-node node_id #interfaces name_of_control_class name_of_application_[class args …]
+node node_id #interfaces name_of_control_class name_of_application [class args …]
 ```
 
-Node ids must start at 0 and follow a strict increasing order. Args are accessible to the node application algorithm via a String[] args parameter of the initialise() method.
+Node ids must start at 0 and follow a strict increasing order. Args are accessible to the node application algorithm via a `String[] args` parameter of the `initialise()` method.
 
 Example:
 
@@ -256,9 +256,9 @@ Example:
 link 0.0 1.0 10000000 10 0.0 0.0 down
 ```
 
-introduces a link from interface 0 of node 0 to interface 0 of node 1 with a 10 Mbps bit rate, 0.0 error rate, 0.0 jitter and starting in state down.
+introduces a link from interface 0 of node 0 to interface 0 of node 1 with a 10 Mbps bit rate, 0.0 error rate, 0.0 jitter and starting in state down. Jitter is defined as percentage of the link bandwidth and the propagation time varies randomly in the range [latency .. latency * jitter].
 
-The configuration file can also introduce several types of events to be fired at given time steps. The general syntax is *event_name time_of_event event_parameters*. Here are examples of the possible ones. 
+The configuration file can also introduce several types of events to be fired at given time steps. The general syntax is *event_name time_of_event event_parameters*. Here are examples of the available events. 
 
 ```
 traceroute 12000 origin_node destination_node
@@ -269,7 +269,7 @@ uplink / downlink 18000 link_origin link_destination
 dumpcontrolstate 8000 [ all | node id ]
 ```
 
-The first one send a *tracing packet* at *time = 12000* from *from_node* to *destination_node*. Tracing packets are directly recognized by nodes and allow tracing the path from origin to destination in the current configuration, using the instantiated *control algorithms*.
+The first one sends a *tracing packet* at *time = 12000* from *from_node* to *destination_node*. Tracing packets are directly recognized by nodes kernels and allow tracing the path from origin to destination in the current configuration, using the instantiated *control algorithms*.
 
 The *dumpappstate* one delivers a *dumpappstate event* at *time = 8000* to the *Application Algorithm* of all nodes or to a specific one.
 
@@ -283,7 +283,7 @@ The *dumpcontrolstate* one delivers a *dumpcontrolstate event* at *time = 8000* 
 
 Finally, a line starting with ´#´is considered a *comment*.
 
-In the configuration file, in the first token or command, character case is not relevant. For example, writing 'node' or writing 'NoDe' produces the same result. The same is true for events to be fired. 'dumpPacketStats' or 'dumppacketstats' produces the same result. It is also possible to use underscrores as separators while writing events names, as shown in the table below, where each row shows equivalent forms of the same token.
+In the configuration file, in the first token or command, character case is not relevant. For example, writing 'node' or writing 'NoDe' produces the same result. The same is true for events to be fired. 'dumpPacketStats' or 'dumppacketstats' produces the same result. It is also possible to use underscrores as separators while writing events names, as shown in the table below, where each row shows equivalent forms of writing the same token.
 
 | Original name        | Using case to highlight | Using underscores        |
 | -------------------- |-------------------------| -------------------------|
