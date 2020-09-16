@@ -539,13 +539,13 @@ public class EndSystemControl implements ControlAlgorithm {
 }
 ```
 
-Class *FloodingSwitch* is another example a control algorithm. This one implements a flooding switch and therefore can only be used in a network without cycles. Most of its upcall methods are identical to the ones of the previous algorthm but the upcall *forward_packet*. All identical methods are not shown.
+Class *FloodingSwitch* is another example of a control algorithm. This one implements a flooding switch and therefore can only be used in a network without cycles. Most of its upcall methods are identical to the ones of the previous algorithm but the upcall *forward_packet*. All identical methods are not shown.
 
-Method `initialise()` does not tests the number of interfaces of the node and also `returns 0`. The upcall `forward_packet()` does the flood, i.e. it sends a copy of the packet to all interfaces of the node in state is *up* but the one from which the packet come. 
+Method `initialise()` does not tests the number of interfaces of the node and also `returns 0`. The upcall `forward_packet()` does the flood, i.e. it sends a copy of the packet to all interfaces whose state is *up* but the one from which the packet came. 
 
 Both control algorithms shown always send a copy of the packet to be forwarded, not the packet object itself. Sending the object may introduce hard to debubg errors. That would be more error prone in this case since the algorithm implements a real flood.
 
-If this control algorithm is used in a network with cycles, a broadcast storm of duplicte packets would arise. The EndSystem control algorithm only forwards locally sent packets (`interface == LOCAL`) and therefore drops packets received by the node whose destination is not the local node.
+If this control algorithm is used in a network with cycles, a broadcast storm of duplicte packets would arise. The EndSystem control algorithm only forwards locally originated packets (`interface == LOCAL`) and therefore drops packets received by the node whose destination is not the node.
 
 ```java
 
@@ -589,7 +589,7 @@ public class FloodingSwitch implements ControlAlgorithm {
 
 }
 ```
-Class `EmptyApp` is not shown. This application algorithm does nothing and is provided in the library to be used as application algorithm of switches that do not run any application.
+Class `EmptyApp()` is not shown. This application algorithm does nothing and is provided in the library to be used as application algorithm of switches that run no application code, i.e. all upcalls are empty.
 
 Below, the result of the simulation is shown. 
 
@@ -641,11 +641,11 @@ log: sender time 8000 node 1 sent ping packet n. 8 - src 1 dst 2 type DATA ttl 3
 simulation ended - last processing step with clock = 8000
 ```
 
-In the forst lines, the processing of the configuration file contents is shown, namely the creation of nodes and the instalation of links. Now, the simulation starts. At the first clock tick a first packet is sent, 50 ms later ir gets to the destination, the receiver replies and more 50 ms later the reply gets to the sender. The packet has a size of 26 bytes (20 for the header as in IP and 6 to represent the value of the counter (as a character string). The origin and destination nodes as well as the sequence number and the original value of the TTL are also shown.
+In the iorst lines, the processing of the configuration file contents is shown, namely the creation of nodes and the instalation of links. Now, the simulation starts. At the first clock tick a first packet is sent, 100 ms later it gets to the destination, the receiver replies and more 100 ms later the reply gets to the sender. This is so, because transmition time is negligible and only the links latency accounts for the end to end transit time. The packet has a size of 26 bytes: 20 for the header as in IP, and 6 to represent the value of the counter (as a character string). The origin and destination nodes, as well as the sequence numbers and the original value of the TTL are also shown.
 
-At the last processing step, when the value of the clock is 8000, nodes reveive the events shown in the configuration file. Only the sender shows its state, the receiver and the switch have nothing to show. After, all nodes print the number of packets sent and received as well as the number of packets sent and received through each of its links. Each of the sender and receiver nodes sent and received 7 packets and these packets were also sent and received by their links. It is also noted that these links never droped or forwarded packets. It is interesting to note that the sender still sends a new packet during this processing step, but as this happens after the execution of the `show status` upcalls, this packet is not considered by nodes and links counters.
+At the last processing step, when the value of the clock is 8000, nodes reveive the events written in the configuration file. Only the sender  and the receiver show their state, since the switch has nothing to show. After, all nodes print the number of packets sent and received as well as the number of packets sent and received through each of its links. The sender and receiver nodes sent and received 7 packets, and these packets were also sent and received by their links. It is also noted that these links never droped or forwarded packets. It is interesting to note that the sender still sends a new packet during this processing step, but as this happens after the execution of the show status and stats upcalls, this packet is not considered by nodes and links counters.
 
-As the reader can realize, the shown application algorithms are build as classes that implement the `ApplicationAlgorithm()` interface. That way the code shows all the required details. Package `library` also contains two abstract classes, `AbstractApplicationAlgorithm()` and   `AbstractControlAlgorithm()`. Theses classe may be used to write application and control algorithms that extend them, what results in a more concise code style. For example, using the `AbstractApplicationAlgorithm` the `Sender()` class could become (without counting the number of packets sent and ignoring the replies.
+As the reader can realize, the shown algorithms are build as classes that implement the `ApplicationAlgorithm` and the `ControlAlgorithm` interfaces. That way the code shows all the required details. Package `library` also contains two abstract classes, `AbstractApplicationAlgorithm()` and   `AbstractControlAlgorithm()`. Theses classe may be used to write application and control algorithms that extend them, what results in a more concise code style. For example, using the `AbstractApplicationAlgorithm` the `Sender()` class could become (without counting the number of packets sent and ignoring the replies):
 
 ```java
 import java.util.Arrays;
