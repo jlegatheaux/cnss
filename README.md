@@ -300,9 +300,9 @@ In the configuration file, in the first token or command, character case is not 
 
 parameter stop 8000   # 8 seconds
 
-node 0 2 cnss.library.FloodingSwitch cnss.library.EmptyApp
-node 1 1 cnss.library.EndSystemControl cnss.examples.Sender
-node 2 1 cnss.library.EndSystemControl cnss.examples.Receiver
+node 0 2 cnss.lib.FloodingSwitch cnss.lib.EmptyApp
+node 1 1 cnss.lib.EndSystemControl cnss.examples.Sender
+node 2 1 cnss.lib.EndSystemControl cnss.examples.Receiver
 
 Link 0.0 1.0 1000000 50 0 0
 Link 0.1 2.0 1000000 50 0 0
@@ -448,7 +448,7 @@ Whenever it is not possible to forward the packet, for example because the inter
 Class `EndSystemControl()` can only adequately forward packets of node using a kind of *default route*, i.e. with one only interface. Therefore, during its initialization, it tests this condition to avoid simulation users the trouble of using this control inadequately. This method also `returns 0` since this control does not requires the use of periodic clock ticks.
 
 ```java
-package cnss.library;
+package cnss.lib;
 
 // the control (routing) of an end system with one only interface
 
@@ -650,7 +650,7 @@ As the reader can realize, the shown algorithms are build as classes that implem
 ```java
 import java.util.Arrays;
 import cnss.simulator.*;
-import cnss.utils.*;
+import cnss.lib.*;
 
 public class Sender extends AbstractApplicationAlgorithm {
 
