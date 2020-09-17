@@ -1,6 +1,6 @@
 # Simple tests of sending and receiving packets
 
-parameter stop 3000   # 3 seconds
+parameter stop 3000   # 3000 ms equal 3 seconds
 
 node 0 2 cnss.library.FloodingSwitch cnss.library.EmptyApp
 node 1 1 cnss.library.EndSystemControl cnss.examples.Sender
