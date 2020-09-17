@@ -4,8 +4,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import cnss.simulator.Event.EventType;
-import cnss.simulator.Packet;
-import cnss.simulator.DataPacket;
 import cnss.simulator.Packet.PacketType;
 
 

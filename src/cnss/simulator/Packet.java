@@ -112,7 +112,7 @@ public class Packet {
 	 * 
 	 * @param s the size of the packet
 	 */
-	private void setSize(int s) {
+	public void setSize(int s) {
 		size = s;
 	}
 
@@ -200,10 +200,10 @@ public class Packet {
 	 */
 	public DataPacket toDataPacket() {
 	    if ( type != PacketType.DATA ) {
-		System.err.println("toDataPacket: not a DataPacket");
-		System.exit(-1);
+	    	System.err.println("toDataPacket: not a DataPacket");
+	    	System.exit(-1);
 	    }
-            byte[] copypl = new byte[payload.length];
+        byte[] copypl = new byte[payload.length];
 	    System.arraycopy(payload, 0, copypl, 0, payload.length);
 	    DataPacket copy = new DataPacket(src, dst, copypl);
 	    copy.setTtl(ttl);

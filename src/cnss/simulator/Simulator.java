@@ -180,7 +180,8 @@ public class Simulator {
 		// in all the following events, their packet, node and interface parameters are
 		// not used
 
-		else if (result[0].equalsIgnoreCase("traceroute")) {
+		else if (result[0].equalsIgnoreCase("traceroute") ||
+				 result[0].equalsIgnoreCase("trace_route")) {
 			// result[1] = time, result[1] = src, result[2] = dst
 			int arg_len = result.length - 2;
 			String[] args = new String[arg_len];
@@ -188,7 +189,8 @@ public class Simulator {
 				args[i] = result[i + 2];
 			}
 			createMainQueueEvent(EventType.TRACEROUTE, Integer.parseInt(result[1]), args);
-		} else if (result[0].equalsIgnoreCase("uplink") || result[0].equalsIgnoreCase("downlink")) {
+		} else if (result[0].equalsIgnoreCase("uplink") || result[0].equalsIgnoreCase("downlink") ||
+				   result[0].equalsIgnoreCase("up_link") || result[0].equalsIgnoreCase("down_link")) {
 			int arg_len = result.length;
 
 			String[] args = new String[arg_len];
@@ -196,26 +198,30 @@ public class Simulator {
 			args[1] = result[2].split("\\.")[1];
 			args[2] = result[3].split("\\.")[0];
 			args[3] = result[3].split("\\.")[1];
-			if (result[0].equalsIgnoreCase("uplink")) {
+			if (result[0].equalsIgnoreCase("uplink") || result[0].equalsIgnoreCase("up_link") ) {
 				createMainQueueEvent(EventType.UPLINK, Integer.parseInt(result[1]), args);
 			} else
 				createMainQueueEvent(EventType.DOWNLINK, Integer.parseInt(result[1]), args);
-		} else if (result[0].equalsIgnoreCase("dumproutes")) {
+		} else if (result[0].equalsIgnoreCase("dumproutes") ||
+				   result[0].equalsIgnoreCase("dump_routes")) {
 			// result[1] = time, result[2] = all or node id
 			String[] args = new String[1];
 			args[0] = result[2];
 			createMainQueueEvent(EventType.DUMP_RT, Integer.parseInt(result[1]), args);
-		} else if (result[0].equalsIgnoreCase("dumpcontrolstate")) {
+		} else if (result[0].equalsIgnoreCase("dumpcontrolstate") ||
+				   result[0].equalsIgnoreCase("dump_control_state")) {
 			// result[1] = time, result[2] = all or node id
 			String[] args = new String[1];
 			args[0] = result[2];
 			createMainQueueEvent(EventType.DUMP_CONTROLSTATE, Integer.parseInt(result[1]), args);
-		} else if (result[0].equalsIgnoreCase("dumpappstate")) {
+		} else if (result[0].equalsIgnoreCase("dumpappstate") ||
+				   result[0].equalsIgnoreCase("dump_app_state")) {
 			// result[1] = time, result[2] = all or node id
 			String[] args = new String[1];
 			args[0] = result[2];
 			createMainQueueEvent(EventType.DUMP_APPSTATE, Integer.parseInt(result[1]), args);
-		} else if (result[0].equalsIgnoreCase("dumppacketstats")) {
+		} else if (result[0].equalsIgnoreCase("dumppacketstats") ||
+				   result[0].equalsIgnoreCase("dump_packet_stats") ) {
 			// result[1] = time, result[2] = all or node id
 			String[] args = new String[1];
 			args[0] = result[2];

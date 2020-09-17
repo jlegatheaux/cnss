@@ -1,6 +1,5 @@
 package cnss.simulator;
 
-import cnss.simulator.Packet;
 
 /**
  * The <code>ApplicationPacket</code> constructor. This is a subclass of the
