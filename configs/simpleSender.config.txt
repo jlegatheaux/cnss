@@ -2,9 +2,9 @@
 
 parameter stop 3000   # 3 seconds
 
-node 0 2 cnss.library.FloodingSwControl cnss.library.EmptyApp
-node 1 1 cnss.library.EndSystemControl cnss.examples.SimpleSender
-node 2 1 cnss.library.EndSystemControl cnss.examples.SimpleReceiver
+node 0 2 cnss.library.FloodingSwitch cnss.library.EmptyApp
+node 1 1 cnss.library.EndSystemControl cnss.examples.Sender
+node 2 1 cnss.library.EndSystemControl cnss.examples.Receiver
 
 Link 0.0 1.0 1000000 50 0 0
 Link 0.1 2.0 1000000 50 0 0
