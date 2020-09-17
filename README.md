@@ -287,6 +287,9 @@ In the configuration file, in the first token or command, character case is not 
 
 | Original name        | Using case to highlight | Using underscores        |
 | -------------------- |-------------------------| -------------------------|
+| traceroute           | TraceRoute              | trace_route              |
+| uplink               | UpLink                  | up_link                  |
+| downlink             | DownLink                | down_link                |
 | dumpappstate         | DumpAppState            | dump_app_state           |
 | dumproute            | DumpRoute               | dump_route               |
 | dumppacketstats      | dumpPacketStats         | dump_packet_stats        |
