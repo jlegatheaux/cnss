@@ -314,7 +314,7 @@ dumpPacketStats 8000 2
 
 This configuration file defines the network of the figure below. Two nodes, node 1 and 2, are connected to a switch, node 0. Links have 1 Mbps bandwidth and 50 ms of propagation time. The configuration file sets the end of the simulation to 8000 ms and schedules events *dump_app_state* to be delivered to all nodes, and events *dump_packet_stats* to be sent to nodes 1 and 2, all at simulation time = 8000, the end of the simulation. The code of the different classes is shown below, as well as the output of the simulation execution.
 
-!(Figures/simpleNet.config.png "A simple network with two application nodes and a switch")
+![A simple network with two application nodes and a switch](Figures/simpleNet.config.png)
 
 
 Class `Sender()` is a simple sender that sends a packet to the `Receiver()` every second. Its `initialise(...)` method returns 1000, i.e. the value of the interval among clock ticks. Whenever it receives a packet, it prints its value using the method `log(...)`. Whenever it receives a *dumpAppState* event, the node kernel calls the `showState()`upcall and it prints the numbers of reply packets received.
