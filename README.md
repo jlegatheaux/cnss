@@ -44,11 +44,11 @@ protected int size; // size of the full packet including header and payload
 protected byte[] payload; // the payload of the packet
 ``` 
 
-Some contants in the `Packet` class have speacial meaning for the CNSS notion of Packet: `HEADERSIZE = 20` is the size of the header to mirror IPv4 packets size and `INITIALTTL = 32` is the default value of packets TTL. 
+Some contants in the `Packet` class have speacial meaning for the CNSS notion of Packet: `Packet.HEADERSIZE = 20` is the size of the header to mirror IPv4 packets size and `Packet.INITIALTTL = 32` is the default value of packets TTL. 
 
 ## Nodes
 
-Nodes execute two algorithms, an application algorithm and a control algorithm. Each of these algorithms is structured as an automaton executing actions associated with a pre-defined set of events, each one is called an upcall.
+Nodes execute two algorithms, an application algorithm and a control algorithm, both structured as an automaton executing actions associated with a pre-defined set of events types, each one called an upcall.
 
 Among the most important upcalls are: `initialise(int now, ...), on_clock_tick(int now), on_receive(int now, DataPacket p), on_timeout(int now)` and several others. Nodes automata may choose to use *clock_ticks*, if so, their periodic value in millisecends should be returned by the `initialise(...)` upcal. If the `initialise` method returns 0, no *clock_ticks* will be delivered to this algorithm.
 
@@ -58,7 +58,7 @@ The definition of the interfaces of the two algorithms executed by nodes are pre
 
 ## ApplicationAlgorithm Interface
 
-The `ApplicationAlgorithm interface should be implemented by any class whose instances are intended to implement application automata executed by nodes. The class that implements this algorithm must have a zero argument constructor. All methods have, as first argument, the virtual time of the processing step where the event fired. Methods:
+The `ApplicationAlgorithm` interface should be implemented by any class whose instances are intended to implement application automata executed by nodes. The class that implements this algorithm must have a zero argument constructor. All methods have, as first argument, the virtual time of the processing step where the event fired. Methods:
 
 ```java
 public int initialise(int now, int node_id, Node nodeObj, String[] args);
@@ -84,15 +84,15 @@ Signals a timeout event.
 public void on_receive(int now, DataPacket p);
 ```
 
-Given a data packet from another node, here it is and process it. Parameter: `p` the received packet.
+Given a data packet from another node, here it is and process it! Parameter: `p` the received packet.
 
 ```java
 public void showState(int now);
 ```
 
-Prints application state table(s) to the screen in a previously agreed format of users of a simulation. This up call is called at each time step where there is a correspondent event directed to the node. See the section on the configuration file.
+Prints application state table(s) to the screen in a previously agreed format. This up call is called at each time step where there is a correspondent event directed to the node in the configuration file (see its section below).
 
-The node processing steps application algorithm can use public methods of the class DataPacket as well as the following down calls:
+The node processing steps application algorithm can use public methods of the class `DataPacket as well as the following down calls:
 
 ```java
 nodeObj.createDataPacket (int destination, byte[] payload)
