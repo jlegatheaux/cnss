@@ -22,7 +22,7 @@ Nodes execute a common **kernel** that triggers processing steps execution using
 
 ![](Figures/cnss-node.png)
 
-**Network configuration** is defined by a configuration file using simple commands to add nodes and links and their parameters, as well as defining the firing of special events at configuration defined virtual time steps.
+**Network configuration** is defined by a configuration file using simple commands to add nodes and links and their parameters. It also allows the introduction of special events to be triggered off at specific time steps.
 
 The real execution progress of the simulation is bound to the time required to execute the nodes processing steps. Therefore, nodes processing steps cannot execute blocking actions, which would block the simulator. Reading and writing local files is acceptable as well as any other quick execution method calls, but using Java calls like `Thread.sleep()` or any kind of synchronization is fully discouraged.
 
@@ -30,9 +30,9 @@ Next, packets, nodes, links and the configuration file are presented in more det
 
 ## Packets
 
-Packets are objects of the class `Packet`. This class has several subclasses among which `DataPacket` and `ControlPacket` that represent different types of packets. Data packets are sent and received by ApplicationAlgorithms. Control packets are sent and received by the ControlAlgorithms. In fact, by analogy, these two types of packets could also be understood as if CNSS supports two fixed IP ports. One addressing a traditional OS kernel, and the other addressing a single application running in the node. 
+Packets are objects of the class `Packet`. This class has several subclasses among which `DataPacket` and `ControlPacket` that represent different types of packets. Data packets are sent and received by ApplicationAlgorithms. Control packets are sent and received by the ControlAlgorithms. In fact, by analogy, these two types of packets could also be understood as if CNSS supports two fixed IP ports. One addressing a traditional OS kernel, and the other addressing a single application executed by the node. 
 
-Packets have several fields, namely: 
+Packets have several fields, namely the following: 
 
 ```java
 protected int src;  // the initial sending node
