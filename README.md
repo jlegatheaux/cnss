@@ -131,17 +131,17 @@ public void on_timeout(int now);
 Signals a timeout event.
 
 ```java
-public void on_receive(int now, Packet p);
+public void on_receive(int now, Packet p, int iface);
 ```
 
-Given a control packet from another node, here it is, process it. Parameter: `p` the packet received.
+Given a control packet from another node, here it is, process it! Parameter: `p` is the packet received, `ìnt` is the interface from where this node received that packet.
 
 	
 ```java
 public void forward_packet(int now, Packet p, int iface);
 ```
 
-Given a packet destinated to another node, forward it to the appropriate interfaces by using the downcall `nodeObj.send(Packet p, int iface)`. Parameters are: `p` is the packet to forward, `iface` is the interface where this node received that packet. If it is not possible to forward the packet, deliver it using `nodeObj.send(Packet p, Node.UNKNOWN)`, since this way the `node` will correctly count all dropped packets.
+Given a packet destinated to another node, forward it to the appropriate interface by using the downcall `nodeObj.send(Packet p, int iface)`. Parameters are: `p` is the packet to forward, `iface` is the interface from where this node received that packet. If it is not possible to forward the packet, deliver it using `nodeObj.send(Packet p, Node.UNKNOWN)` since, this way, the `node` will correctly count all dropped packets.
 
 ```java
 public void on_link_up(int now, int iface);
