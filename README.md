@@ -1,36 +1,36 @@
 # CNSS Overview ( Computer Networks Simple Simulator )
 
-CNSS is written in Java and has been developed for teaching purposes.  
+CNSS is a network simulator, written in Java, developed for teaching purposes, to make it possible to simulate computer networks and simple networking protocols. The simulation results are deterministic and repeatable, making it easier to reproduce and interpret them.  
 
-CNSS was inspired by a simulator, developed around 2001, by Adam Greenhalgh from the University College of London. This simulator was
+CNSS was inspired by a simulator, developed around 2001, by Adam Greenhalgh from the University College of London. That simulator was
 mainly intended for testing routing algorithms based on the distance vector principle, and was limited to networks with zero transit
 time links. 
  
-CNSS is capable of simulating any routing algorithm, as well as simple applications running on heterogeneous nodes. To that end, CNSS leverages a more realistic notion of link, characterised by transmission and propagation delays as well as error rate. Morevoer, in CNSS a network can be comprised of different types of nodes, capable of executing user provided control and application algorithms, in a more generic fashion. 
+CNSS is capable of simulating any routing algorithm, as well as simple application protocols and algorithms running on heterogeneous nodes. To that end, CNSS leverages a more realistic notion of link, characterised by transmission and propagation delays as well as a packet loss rate. Morevoer, in CNSS, a network can be comprised of different types of nodes, capable of executing user provided control and application algorithms, in a more generic fashion. 
 
-To allow a link to simulate a logical link made of a set of links and packet switches, it is also possible to introduce jitter in a link if one so desires.
+Finally, to allow a link to also simulate an overlay provided link, made of a set of links and packet switches, it is also possible to introduce jitter in a link if one so desires. If the jitter is high, it may even introduce random packet reordering.
 
 ## CNSS in short
 
 CNSS simulates a packet switched network where each processing step is **instantaneous**, i.e., executed without advancing the virtual clock, while communications make that clock advance. Virtual time resolution is 1 millisecond, i.e., the clock advances 1 by 1 ms. All nodes and links update their state in a lock step way, according to a logically, perfectly synchronised global notion of time. Their state changes from a state to the following one by executing processing steps. The main concepts of the simulator are presented next.
 
-A network is composed of a set or mix of nodes, interconnected by links. 
+A **network** is composed of a set or mix of **nodes**, interconnected by **links**. Nodes exchange **packets** among themselves. 
 
-Nodes exchange packets. 
+In each **clock tick**, all nodes execute a **processing step** by consuming the events scheduled to them for this processing step. These events may be clock ticks, alarms or packet deliveries to the node. The execution of a processing step may generate future events like alarms and delivery of messages to the same or other nodes, etc.
 
-In each clock tick, all nodes execute a processing step by consuming the events scheduled to them for this processing step. These events may be clock ticks, alarms or packet deliveries to the node. The execution of a processing step in each node may generate future events like alarms, delivery of messages to the same or other nodes, etc.
+Nodes execute a common **kernel** that triggers processing steps execution using **up calls** (upcalls from now on) to the methods of two algorithms defined by the users: a **control algorithm** and an **application algorithm**. These algorithms may be different in each node. Up calls processing steps can send messages, set alarms, etc. by using node kernel interface **down calls** (downcalls from now on). The system imposes that the execution of each node is structured as the execution of two automata: a **control automaton**, controlled by the control algorithm, and an **application automaton**, controlled by the application algorithm. The figure below depicts the structure of a CNSS node.
 
-Nodes execute a common kernel that triggers processing steps execution using up calls to the methods of two algorithms defined by the users: a control algorithm and an application algorithm. These algorithms may be different in each node. These up calls processing steps can send messages, set alarms, etc. to the nodes algorithms using interfaces downcalls. The system imposes that the execution of each node is structured as the execution of two automata: a control automaton controlled by the control algorithm, and an application automaton controlled by the application algorithm.
+![](Figures/cnss-node.png)
 
-Network configuration is defined by a configuration file using simple commands to add nodes and links and their parameters, as well as special events that can be triggered at configuration defined virtual time values.
+**Network configuration** is defined by a configuration file using simple commands to add nodes and links and their parameters, as well as defining the firing of special events at configuration defined virtual time steps.
 
-The real execution progress of the simulation is bound to the time required to execute the nodes processing steps. Therefore, nodes processing steps cannot execute blocking actions, which would block the simulator. Reading and writing local files is accdeptable as well as any other quick execution method calls, but using Java calls like Thread.sleep() or any kind of synchronization is fully discouraged.
+The real execution progress of the simulation is bound to the time required to execute the nodes processing steps. Therefore, nodes processing steps cannot execute blocking actions, which would block the simulator. Reading and writing local files is acceptable as well as any other quick execution method calls, but using Java calls like `Thread.sleep()` or any kind of synchronization is fully discouraged.
 
 Next, packets, nodes, links and the configuration file are presented in more detail.
 
 ## Packets
 
-Packets are objects of the class *Packet*. This class has several subclasses among which *DataPacket* and *ControlPacket* that represent different types of packets. Data packets are sent and received by ApplicationAlgorithms. Control packets are sent and received by the ControlAlgorithms. In fact, by analogy, these two types of packets could also be understood as if CNSS supports two fixed IP ports. One addressing a traditional OS kernel, and the other addressing a single application running in the node. 
+Packets are objects of the class `Packet`. This class has several subclasses among which `DataPacket` and `ControlPacket` that represent different types of packets. Data packets are sent and received by ApplicationAlgorithms. Control packets are sent and received by the ControlAlgorithms. In fact, by analogy, these two types of packets could also be understood as if CNSS supports two fixed IP ports. One addressing a traditional OS kernel, and the other addressing a single application running in the node. 
 
 Packets have several fields, namely: 
 
@@ -44,15 +44,15 @@ protected int size; // size of the full packet including header and payload
 protected byte[] payload; // the payload of the packet
 ``` 
 
-Some contants in the Packet class have speacial meaning for the CNSS notion of Packet: *HEADERSIZE = 20* is the size of the header to mirror IPv4 packets size and *INITIALTTL = 32* is the default value of packets TTL. 
+Some contants in the `Packet` class have speacial meaning for the CNSS notion of Packet: `HEADERSIZE = 20` is the size of the header to mirror IPv4 packets size and `INITIALTTL = 32` is the default value of packets TTL. 
 
 ## Nodes
 
-Nodes execute two algorithms, an application algorithm and a control algorithm. Each of these algorithms is structured as an automaton executing actions associated with a pre-defined set of events, each one called an **upcall**.
+Nodes execute two algorithms, an application algorithm and a control algorithm. Each of these algorithms is structured as an automaton executing actions associated with a pre-defined set of events, each one is called an upcall.
 
 Among the most important upcalls are: `initialise(int now, ...), on_clock_tick(int now), on_receive(int now, DataPacket p), on_timeout(int now)` and several others. Nodes automata may choose to use *clock_ticks*, if so, their periodic value in millisecends should be returned by the `initialise(...)` upcal. If the `initialise` method returns 0, no *clock_ticks* will be delivered to this algorithm.
 
-Each upcall, but the `initialise` one, is triggered by the delivery of an event that got to the node. All events that should be triggered in the same processig step (characterized by the same value of the *clock*) are delivered in sequence without any predefineded specified order. 
+Each upcall, but the `initialise` one, is triggered by the delivery of an event that got to the node. All events that should be triggered in the same processig step (characterized by the same value of the **clock**) are delivered in sequence without any predefineded specified order. 
 
 The definition of the interfaces of the two algorithms executed by nodes are presented next.
 
