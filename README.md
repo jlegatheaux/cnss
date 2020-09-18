@@ -217,6 +217,8 @@ Virtual time is in milliseconds, starts at 0 and ends at a value that can be cha
 
 These lines obey a simple syntax. In the current version, tokens must be separated by exactly one space chracter. The different possible configuration file lines are the following.
 
+### Parameters
+
 ```
 parameter name value 
 ```
@@ -227,14 +229,16 @@ Examples:
 ```
 parameter stop 100000  
 ```
-This parameter defines the duration of the simulation in virtual ms. It is good practice to make this the first line of the config file; this first parameter is directly recognized by the simulator.
+This parameter defines the duration of the simulation in virtual ms. It is good practice to make this the first line of the config file. This special parameter is directly recognized by the simulator.
 
 ```
 parameter splithorizon true
 parameter expiration true
 ```
 
-which can be used to parametrize the control algorithms.
+which can be used to parametrize control algorithms.
+
+### Nodes
 
 ```
 node node_id #interfaces name_of_control_class name_of_application [class args …]
@@ -248,6 +252,8 @@ Example:
 Node 1 5 FloodSwitchAlgorithm SwitchAppAlgorithm hello world
 ```
 
+### Links
+
 ```
 link side1_node.side1_interface side2_node.side2_interface bandwidth latency errors jitter [ state ]
 ```
@@ -256,26 +262,28 @@ Example:
 link 0.0 1.0 10000000 10 0.0 0.0 down
 ```
 
-introduces a link from interface 0 of node 0 to interface 0 of node 1 with a 10 Mbps bit rate, 0.0 error rate, 0.0 jitter and starting in state down. Jitter is defined as percentage of the link bandwidth and the propagation time varies randomly in the range [latency .. latency * jitter].
+introduces a link from interface 0 of node 0 to interface 0 of node 1 with a 10 Mbps bit rate, 0.0 error rate, 0.0 jitter and starting in state down. Jitter is defined as percentage of the link bandwidth and the propagation time varies randomly in the interval [latency .. latency * jitter].
 
-The configuration file can also introduce several types of events to be fired at given time steps. The general syntax is *event_name time_of_event event_parameters*. Here are examples of the available events. 
+### Configuration defined commands events
+
+The configuration file can also introduce several types of events to be fired at given time steps. The general syntax is *event_name time_of_event event_parameters*. Here are some examples of the available events. 
 
 ```
 traceroute 12000 origin_node destination_node
 dumpappstate 8000 [ all | node id ]
 dumproute 1000 [ all | node id ]
-dumpPacketStats 120000 [ all | node id ]
+dumppacketstats 120000 [ all | node id ]
 uplink / downlink 18000 link_origin link_destination
 dumpcontrolstate 8000 [ all | node id ]
 ```
 
-The first one sends a *tracing packet* at *time = 12000* from *from_node* to *destination_node*. Tracing packets are directly recognized by nodes kernels and allow tracing the path from origin to destination in the current configuration, using the instantiated *control algorithms*.
+The first one sends a *tracing packet* at *time = 12000* from *from_node* to *destination_node*. Tracing packets are directly recognized by nodes kernels and allow tracing the path from origin to destination, in the current configuration, using the instantiated *control algorithms*.
 
 The *dumpappstate* one delivers a *dumpappstate event* at *time = 8000* to the *Application Algorithm* of all nodes or to a specific one.
 
 The *dumproute* one delivers a *dumproute event* at *time = 1000* to the *Control Algorithm* of all nodes or to a specific one.
 
-The *dumpPacketsStats* one delivers a *dump packet statistics event* at *time = 120000* to all nodes or to a specific one.
+The *dumppacketsstats* one delivers a *dump packet statistics event* at *time = 120000* to all nodes or to a specific one.
 
 The *uplink / downlink* ones delivers an *uplink event or a down link event* at *time = 18000* to the *Control Algorithm* of all nodes or to a specific one.
 
@@ -283,7 +291,7 @@ The *dumpcontrolstate* one delivers a *dumpcontrolstate event* at *time = 8000* 
 
 Finally, a line starting with ´#´is considered a *comment*.
 
-In the configuration file, in the first token or command, character case is not relevant. For example, writing 'node' or writing 'NoDe' produces the same result. The same is true for events to be fired. 'dumpPacketStats' or 'dumppacketstats' produces the same result. It is also possible to use underscrores as separators while writing events names, as shown in the table below, where each row shows equivalent forms of writing the same token.
+In the configuration file, the character case of the first token, the command, is not relevant. For example, writing 'node' or writing 'NoDe' produces the same result. The same is true for events to be fired. 'dumpPacketStats' or 'dumppacketstats' produces the same result. It is also possible to use underscrores as separators while writing events names, as shown in the table below, where each row shows equivalent forms of writing the same token.
 
 | Original name        | Using case to highlight | Using underscores        |
 | -------------------- |-------------------------| -------------------------|
@@ -296,7 +304,9 @@ In the configuration file, in the first token or command, character case is not 
 | dumpcontrolstate     | DumpControlState        | dump_control_state       |
 
 
-## Example of a configuration file
+## Example of a simulation
+
+### Configuration file
 
 ```
 # Simple network: 2 nodes and one switch
@@ -315,7 +325,7 @@ dumpPacketStats 8000 1
 dumpPacketStats 8000 2
 ```
 
-This configuration file defines the network of the figure below. Two nodes, node 1 and 2, are connected to a switch, node 0. Links have 1 Mbps bandwidth and 50 ms of propagation time. The configuration file sets the end of the simulation to 8000 ms and schedules events *dump_app_state* to be delivered to all nodes, and events *dump_packet_stats* to be sent to nodes 1 and 2, all at simulation time = 8000, the end of the simulation. The code of the different classes is shown below, as well as the output of the simulation execution.
+This configuration file defines the network of the figure below. Two nodes, node 1 and 2, are connected to a switch, node 0. Links have 1 Mbps bandwidth and 50 ms of propagation time. The configuration file sets the end of the simulation to 8000 ms and schedules events *dump_app_state* to be delivered to all nodes, and events *dump_packet_stats* to be sent to nodes 1 and 2, all at simulation time = 8000, the end of the simulation. The code of the different classes is shown below as well as the output of the simulation execution.
 
 ![](Figures/simpleNet.config.png)
 
