@@ -197,8 +197,8 @@ The model of CNSS link is very simple: a link is point to point (connects exactl
 ```java
 private long bwidth = 1000;  // in bits per second - bps
 private int latency = 0;     // in ms
-private double errors = 0.0; // error rate probability - 0.0 is a perfect (no errors) link
-private double jitter = 0.0; // propagation time oscilation is between 0 and latency*jitter  - 0.0 means no variation
+private double errors = 0.0; // packet drop rate probability - 0.0 is a perfect (no errors)
+private double jitter = 0.0; // propagation time is randonmly distributed  between 0 and latency*jitter  - 0.0 means no variation
 private boolean up;   
 ```
 
