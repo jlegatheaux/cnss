@@ -197,12 +197,14 @@ The model of CNSS link is very simple: a link is point to point (connects exactl
 ```java
 private long bwidth = 1000;  // in bits per second - bps
 private int latency = 0;     // in ms
-private double errors = 0.0; // packet drop rate probability - 0.0 is a perfect (no errors)
-private double jitter = 0.0; // propagation time is randonmly distributed  between 0 and latency*jitter  - 0.0 means no variation
+private double errors = 0.0; // packet drop rate probability
+private double jitter = 0.0; // propagation time variation
 private boolean up;   
 ```
 
 Besides these variables, links have two queues at each end: an *out queue* or output queue, and an *in queue* or input queue. At the end of each processing step, packets queued in the *out queues* of all links during that processing step, are consumed and become *delivery* events associated with the other extreme of the link, and will be delivered when the corresponding transit time ends. Transit times are computed using the time required to transmit the packet, as well as those in front of it in the same *out queue*, added to the propagation time.
+
+Link parameters **error** and **jitter** randomly constraint the way the link performs. For example, probability of packets being dropped is 1% if the link **errors** parameter is equal to 0.01. Additionally, propagation time is randomly distributed in the interval **[latency,(1+jitter)*latency]**. Therefore, if latency is 50 and jitter 0.1, propagation time randomly varies between 50.0 and 55.0.
 
 ## Network definition and simulation configuration file
 
@@ -213,8 +215,7 @@ java -cp bin cnss.simulator.Simulafor config.txt
 ```
 Virtual time is in milliseconds, starts at 0 and ends at a value that can be changed in the configuration file. Its limit is *Integer.MAXVALUE* which corresponds to around two million seconds, or more or less 555 hours of virtual time.
 
-### The configuration file is made of lines
-
+This file is structured as a sequence of lines of text.
 These lines obey a simple syntax. In the current version, tokens must be separated by exactly one space chracter. The different possible configuration file lines are the following.
 
 ### Parameters
@@ -229,7 +230,7 @@ Examples:
 ```
 parameter stop 100000  
 ```
-This parameter defines the duration of the simulation in virtual ms. It is good practice to make this the first line of the config file. This special parameter is directly recognized by the simulator.
+This parameter defines the duration of the simulation in virtual ms. It is good practice to make this the first line of the config file. This special parameter is directly recognized by the simulator. Other examples:
 
 ```
 parameter splithorizon true
@@ -244,7 +245,7 @@ which can be used to parametrize control algorithms.
 node node_id #interfaces name_of_control_class name_of_application [class args …]
 ```
 
-Node ids must start at 0 and follow a strict increasing order. Args are accessible to the node application algorithm via a `String[] args` parameter of the `initialise()` method.
+Node ids must start at 0 and follow a strict increasing order. Arguments are accessible to the node application algorithm via a `String[] args` parameter of the `initialise()` method.
 
 Example:
 
@@ -259,14 +260,14 @@ link side1_node.side1_interface side2_node.side2_interface bandwidth latency err
 ```
 Example:
 ```
-link 0.0 1.0 10000000 10 0.0 0.0 down
+link 0.0 1.0 10000000 10 0.01 0.0 down
 ```
 
-introduces a link from interface 0 of node 0 to interface 0 of node 1 with a 10 Mbps bit rate, 0.0 error rate, 0.0 jitter and starting in state down. Jitter is defined as percentage of the link bandwidth and the propagation time varies randomly in the interval [latency .. latency * jitter].
+introduces a link from interface 0 of node 0 to interface 0 of node 1 with a 10 Mbps bit rate, with 1% error rate, 0.0 jitter and starting in state down. 
 
-### Configuration defined commands events
+### Configuration defined events
 
-The configuration file can also introduce several types of events to be fired at given time steps. The general syntax is *event_name time_of_event event_parameters*. Here are some examples of the available events. 
+The configuration file can also introduce several types of events to be fired at stated time steps. Each one may be introduced using a 3-tuple  _(event name, time of event, event parameters)_. Here are some examples of the available events. 
 
 ```
 traceroute 12000 origin_node destination_node
@@ -277,7 +278,7 @@ uplink / downlink 18000 link_origin link_destination
 dumpcontrolstate 8000 [ all | node id ]
 ```
 
-The first one sends a *tracing packet* at *time = 12000* from *from_node* to *destination_node*. Tracing packets are directly recognized by nodes kernels and allow tracing the path from origin to destination, in the current configuration, using the instantiated *control algorithms*.
+The first one sends a *tracing packet* at *time = 12000* from *from_node* to *destination_node*. Tracing packets are directly recognized by nodes kernels and allow tracing the path from origin to destination.
 
 The *dumpappstate* one delivers a *dumpappstate event* at *time = 8000* to the *Application Algorithm* of all nodes or to a specific one.
 
@@ -289,7 +290,7 @@ The *uplink / downlink* ones delivers an *uplink event or a down link event* at 
 
 The *dumpcontrolstate* one delivers a *dumpcontrolstate event* at *time = 8000* to the *Control Algorithm* of all nodes or to a specific one.
 
-Finally, a line starting with ´#´is considered a *comment*.
+Finally, a line starting with ´#´ is considered a *comment*.
 
 In the configuration file, the character case of the first token, the command, is not relevant. For example, writing 'node' or writing 'NoDe' produces the same result. The same is true for events to be fired. 'dumpPacketStats' or 'dumppacketstats' produces the same result. It is also possible to use underscrores as separators while writing events names, as shown in the table below, where each row shows equivalent forms of writing the same token.
 
@@ -298,15 +299,16 @@ In the configuration file, the character case of the first token, the command, i
 | traceroute           | TraceRoute              | trace_route              |
 | uplink               | UpLink                  | up_link                  |
 | downlink             | DownLink                | down_link                |
-| dumpappstate         | DumpAppState            | dump_app_state           |
+| dumpappstate         | DumpAppState            | dump_app\_state           |
 | dumproute            | DumpRoute               | dump_route               |
-| dumppacketstats      | dumpPacketStats         | dump_packet_stats        |
-| dumpcontrolstate     | DumpControlState        | dump_control_state       |
+| dumppacketstats      | dumpPacketStats         | dump_packet\_stats        |
+| dumpcontrolstate     | DumpControlState        | dump_control\_state       |
 
 
 ## Example of a simulation
 
 ### Configuration file
+The following configuration file is used i this example.
 
 ```
 # Simple network: 2 nodes and one switch
@@ -325,12 +327,12 @@ dumpPacketStats 8000 1
 dumpPacketStats 8000 2
 ```
 
-This configuration file defines the network of the figure below. Two nodes, node 1 and 2, are connected to a switch, node 0. Links have 1 Mbps bandwidth and 50 ms of propagation time. The configuration file sets the end of the simulation to 8000 ms and schedules events *dump_app_state* to be delivered to all nodes, and events *dump_packet_stats* to be sent to nodes 1 and 2, all at simulation time = 8000, the end of the simulation. The code of the different classes is shown below as well as the output of the simulation execution.
+It defines the network of the figure below. Two nodes, node 1 and 2, are connected to a switch, node 0. Links have 1 Mbps bandwidth and 50 ms of propagation time. The configuration file sets the end of the simulation to 8000 ms and schedules events *dump_app\_state* to be delivered to all nodes, and events *dump_packet\_stats* to be sent to nodes 1 and 2, all at simulation time = 8000, the end of the simulation. The code of the different classes is shown below as well as the output of the simulation execution.
 
 ![](Figures/simpleNet.config.png)
 
 
-Class `Sender()` is a simple sender that sends a packet to the `Receiver()` every second. Its `initialise(...)` method returns 1000, i.e. the value of the interval among clock ticks. Whenever it receives a packet, it prints its value using the method `log(...)`. Whenever it receives a *dumpAppState* event, the node kernel calls the `showState()`upcall and it prints the numbers of reply packets received.
+Next we present the classes used in the example. Class `Sender` is a simple sender application that sends a packet to the `Receiver` every second. Its `initialise(...)` method returns 1000, i.e. the value of the interval between clock ticks. Whenever it receives a packet, it prints its value using the method `log(...)`. Whenever it receives a *dump_app\_state* event, the node kernel calls the `showState()`upcall, that prints the numbers of reply packets received.
 
 ```Java
 package cnss.examples;
@@ -393,7 +395,7 @@ public class Sender implements ApplicationAlgorithm {
 
 }
 ```
-Class `Receiver()` implements the receiver node algorithm, one that only prints the contents of each received packet and replies to the sender, mirroring a *ping reply*. It also prints the number of received messages when it receives a *dump_app_stat* event signaled via a `showState()` upcall.
+Class `Receiver` implements the receiver node algorithm, which only prints the contents of each received packet and replies to the sender, similat to a *ping reply*. It also prints the number of received messages when it receives a *dump_app\_stat* event signaled via a `showState()` upcall.
 
 ```java
 package cnss.examples;
@@ -454,11 +456,11 @@ public class Receiver implements ApplicationAlgorithm {
 
 }
 ```
-The example also illustrates how control algorithms can be used to forward packets. Class `EndSystemControl()` implements packet forwarding in a node with one only interface. If the interface from which the packet came is the local interface, and the node interface is up, the packet is forwarded to the node interface, i.e. the one that is not the local loop one. The node kernel only calls the upcall `forward_packet()` of the control algorithm to forward a packet whose destination is not the local node, thus, it is useless to test if the destination of the packet os not the node itself. 
+The example also illustrates how control algorithms can be used to forward packets. Class `EndSystemControl` is a control algorithm that implements packet forwarding for a node with one only link (and interface). If the interface from which the packet came is the virtual local loop interface, and the node link is up, the packet is forwarded to its interface. The node kernel only calls the upcall `forward_packet()` of the control algorithm to forward a packet whose destination is not the local node, thus, it is useless to test if the destination of the packet is not the node itself. 
 
-Whenever it is not possible to forward the packet, for example because the interface is down, the downcall `send()` is still called with `UNKNOWN` as the value of the interface used to forward the packet. This allows the node kernel to count dropped packets. If `tracingOn == true`, the algorithm prints a trace of its execution to help the simulation users to understand what is going on.
+Whenever it is not possible to forward the packet, for example because the interface is down, the downcall `send()` is still called with `UNKNOWN` as the value of the interface used to forward the packet. This allows the kernel of the node to count dropped packets. If `tracingOn == true`, the algorithm prints a trace of its execution to help the simulation users to understand what is going on.
 
-Class `EndSystemControl()` can only adequately forward packets of node using a kind of *default route*, i.e. with one only interface. Therefore, during its initialization, it tests this condition to avoid simulation users the trouble of using this control inadequately. This method also `returns 0` since this control does not requires the use of periodic clock ticks.
+Class `EndSystemControl` can only adequately forward packets of nodes using a kind of *default route*, i.e. with one only interface. Therefore, during its initialization, it tests this condition to avoid simulation users the trouble of using this control algorithm inadequately. This method also `returns 0` since the algorithm does not requires the use of periodic clock ticks.
 
 ```java
 package cnss.lib;
@@ -558,7 +560,7 @@ Method `initialise()` does not tests the number of interfaces of the node and al
 
 Both control algorithms shown always send a copy of the packet to be forwarded, not the packet object itself. Sending the object may introduce hard to debubg errors. That would be more error prone in this case since the algorithm implements a real flood.
 
-If this control algorithm is used in a network with cycles, a broadcast storm of duplicte packets would arise. The EndSystem control algorithm only forwards locally originated packets (`interface == LOCAL`) and therefore drops packets received by the node whose destination is not the node.
+If this control algorithm is used in a network with cycles, a broadcast storm of duplicate packets would arise. The EndSystem control algorithm only forwards locally originated packets (`interface == LOCAL`) and therefore drops packets received by the node whose destination is not the node.
 
 ```java
 
@@ -654,11 +656,13 @@ log: sender time 8000 node 1 sent ping packet n. 8 - src 1 dst 2 type DATA ttl 3
 simulation ended - last processing step with clock = 8000
 ```
 
-In the iorst lines, the processing of the configuration file contents is shown, namely the creation of nodes and the instalation of links. Now, the simulation starts. At the first clock tick a first packet is sent, 100 ms later it gets to the destination, the receiver replies and more 100 ms later the reply gets to the sender. This is so, because transmition time is negligible and only the links latency accounts for the end to end transit time. The packet has a size of 26 bytes: 20 for the header as in IP, and 6 to represent the value of the counter (as a character string). The origin and destination nodes, as well as the sequence numbers and the original value of the TTL are also shown.
+In the first lines, the processing of the configuration file contents is shown, namely the creation of nodes and the instalation of links. Now, the simulation starts. At the first clock tick, a first packet is sent, 100 ms later it gets to the destination, the receiver replies and more 100 ms later the reply gets to the sender. This is so because transmition time is negligible (to transmit 26 bytes at 1Mbps bit rate) and only the links latency accounts for the end to end transit time. The packet has a size of 26 bytes: 20 for the header, as in IP, and 6 to represent the value of the counter (as a character string). The origin and destination nodes, as well as the sequence numbers and the original value of the TTL are also shown.
 
-At the last processing step, when the value of the clock is 8000, nodes reveive the events written in the configuration file. Only the sender  and the receiver show their state, since the switch has nothing to show. After, all nodes print the number of packets sent and received as well as the number of packets sent and received through each of its links. The sender and receiver nodes sent and received 7 packets, and these packets were also sent and received by their links. It is also noted that these links never droped or forwarded packets. It is interesting to note that the sender still sends a new packet during this processing step, but as this happens after the execution of the show status and stats upcalls, this packet is not considered by nodes and links counters.
+At the last processing step, when the value of the clock is 8000, nodes reveive the events stated in the configuration file. Only the sender  and the receiver show their state, since the switch has nothing to show. After, all nodes print the number of packets sent and received as well as the number of packets sent and received through each of its links. The sender and receiver nodes sent and received 7 packets each, and these packets were also sent and received by their links. It is also noted that these links never droped packets. It is interesting to note that the sender still sends a new packet during this processing step, but as this happens after the execution of the show status and show stats upcalls, this packet is not considered in nodes and links counters.
 
-As the reader can realize, the shown algorithms are build as classes that implement the `ApplicationAlgorithm` and the `ControlAlgorithm` interfaces. That way the code shows all the required details. Package `library` also contains two abstract classes, `AbstractApplicationAlgorithm()` and   `AbstractControlAlgorithm()`. Theses classe may be used to write application and control algorithms that extend them, what results in a more concise code style. For example, using the `AbstractApplicationAlgorithm` the `Sender()` class could become (without counting the number of packets sent and ignoring the replies):
+The above shown algorithms are build as classes that implement the `ApplicationAlgorithm` and the `ControlAlgorithm` interfaces. That way the code shows all the required details. 
+
+Package `library` also contains two abstract classes, `AbstractApplicationAlgorithm()` and   `AbstractControlAlgorithm()`. Theses classe may be used to write application and control algorithms that extend them, what results in a more concise coding style. For example, using the `AbstractApplicationAlgorithm` the `Sender` class could become simpler (we also do not show counting the number of packets sent and the processing of received packets):
 
 ```java
 import java.util.Arrays;
