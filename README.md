@@ -1,10 +1,8 @@
 # CNSS Overview ( Computer Networks Simple Simulator )
 
-CNSS is a network simulator, written in Java, developed for teaching purposes, to make it possible to simulate computer networks and simple networking protocols. The simulation results are deterministic and repeatable, making it easier to reproduce and interpret them.  
+CNSS is a network simulator, written in Java, developed for teaching purposes, to make it possible to simulate computer networks and simple networking protocols. The simulation results are deterministic and repeatable, making it easier to reproduce and interpret them.  This simulator is developped and maintained by me with the help of members of the systems group of the Departament of Informaticas of the Faculty of Sciences of the NOVA Lisbon University ([FCT/UNL](https://fct.unl.pt)).
 
-CNSS was inspired by a simulator, developed around 2001, by Adam Greenhalgh from the University College of London. That simulator was
-mainly intended for testing routing algorithms based on the distance vector principle, and was limited to networks with zero transit
-time links. 
+CNSS was inspired by a simulator, developed around 2001, by Adam Greenhalgh from the University College of London. That simulator was mainly intended for testing routing algorithms based on the distance vector principle, and was limited to networks with zero transit time links. 
  
 CNSS is capable of simulating any routing algorithm, as well as simple application protocols and algorithms running on heterogeneous nodes. To that end, CNSS leverages a more realistic notion of link, characterised by transmission and propagation delays as well as a packet loss rate. Morevoer, in CNSS, a network can be comprised of different types of nodes, capable of executing user provided control and application algorithms, in a more generic fashion. 
 
