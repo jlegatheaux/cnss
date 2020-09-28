@@ -29,10 +29,16 @@ public class Link {
 	private int counter2_in = 0;
 	private int counter1_out = 0;
 	private int counter2_out = 0;
+	
 	private Queue<Packet> in1 = new LinkedList<>();
 	private Queue<Packet> in2 = new LinkedList<>();
 	private Queue<Packet> out1 = new LinkedList<>();
 	private Queue<Packet> out2 = new LinkedList<>();
+	
+	// during a processing step, packets are transmitted; when the next one begins
+	// transmitting, may be the previous ones have not yet been fully transmitted.
+	private int timeOfLastBitTransmitted1 = 0;
+	private int timeOfLastBitTransmitted2 = 0;
 
 	// the queue of events containing the packets to be delivered after
 	// the call of transmitPackets method
@@ -141,53 +147,54 @@ public class Link {
 	 */
 	public void transmitPackets(int now) {
 		Packet p;
-		double transmissionTime;
 		if (isUp()) {
 			// begin by side 1 of the link
-			transmissionTime = 0.0; // messages sent in the same processing step
-			// add to the previous transmission time
+			// packets will begin being transmitted now or when previous packets are done
+			if ( timeOfLastBitTransmitted1 < now ) timeOfLastBitTransmitted1 = now;
 			while (out1.size() > 0) {
 				p = out1.poll(); // retrieves the packet from the queue
 				// TODO: packet dropping and jitter
 
 				if (p.getType() == PacketType.TRACING) {
-					// add the link crossed to the path - time is the start transmission time
-					String trace = p.getPayload().toString() + "time " + now + " " + node1 + "." + iface1 + "->" + node2 + "." + iface2;
+					// add the link crossed to the path - time is when the packet will start being transmitted
+					String trace = p.getPayload().toString() + "time " 
+					+ timeOfLastBitTransmitted1 + " " + node1 + "." + iface1 + "->" + node2 + "." + iface2;
 					p.setPayload(trace.getBytes());
 				}
-				// in each side of the link, if several packets are transmitted in sequence,
-				// their transmission times are cumulative
-				transmissionTime += ((double) p.getSize()) * 8.0 * 1000.0 / (double) bwidth; // in ms
+				
+				double transmissionTime = ((double) p.getSize()) * 8.0 * 1000.0 / (double) bwidth; // in ms
 				int transitTime = (int) transmissionTime + latency;
 				if (transitTime < 1)
 					transitTime = 1; // this forces the treatment of the event
 				// in the next processing step, otherwise the event would be ignored
 				// System.out.println("TransmitPackets computed "+transitTime+" ms");
-				outputEvents.add(new Event(EventType.DELIVER_PACKET, now + transitTime, 0, null, p, node2, iface2));
+				int deliverTime = timeOfLastBitTransmitted1+transitTime;
+				timeOfLastBitTransmitted1 += (int) transmissionTime;
+				outputEvents.add(new Event(EventType.DELIVER_PACKET, deliverTime, 0, null, p, node2, iface2));
 				counter2_in++; // the packet will be later received by node 2, interface 2
 			}
 			// now side 2
-			transmissionTime = 0.0;
+			if ( timeOfLastBitTransmitted2 < now ) timeOfLastBitTransmitted2 = now;
 			while (out2.size() > 0) {
 				p = out2.poll(); // retrieves the packet from the queue
 				// TODO: packet dropping and jitter
-				// besides incrementing counters - in which counters?
 
 				if (p.getType() == PacketType.TRACING) {
-					// add the link crossed to the path
-					// add the link crossed to the path
-					String trace = p.getPayload().toString() + " " + node2 + "." + iface2 + "->" + node1 + "." + iface1;
+					// add the link crossed to the path - time is when the packet will start being transmitted
+					String trace = p.getPayload().toString() + "time " 
+					+ timeOfLastBitTransmitted2 + " " + node2 + "." + iface2 + "->" + node1 + "." + iface1;
 					p.setPayload(trace.getBytes());
 				}
-				// in each side of the link, if several packets are transmitted in sequence,
-				// their transmission times are cumulative
-				transmissionTime += ((double) p.getSize()) * 8.0 * 1000.0 / (double) bwidth; // in ms
+				
+				double transmissionTime = ((double) p.getSize()) * 8.0 * 1000.0 / (double) bwidth; // in ms
 				int transitTime = (int) transmissionTime + latency;
 				if (transitTime < 1)
 					transitTime = 1; // this forces the treatment of the event
 				// in the next processing step, otherwise the event would be ignored
 				// System.out.println("TransmitPackets computed "+transitTime+" ms");
-				outputEvents.add(new Event(EventType.DELIVER_PACKET, now + transitTime, 0, null, p, node1, iface1));
+				int deliverTime = timeOfLastBitTransmitted2+transitTime;
+				timeOfLastBitTransmitted2 += (int) transmissionTime;
+				outputEvents.add(new Event(EventType.DELIVER_PACKET, deliverTime, 0, null, p, node1, iface1));
 				counter1_in++; // the packet will be later received by node 1, interface 1
 			}
 		} else {

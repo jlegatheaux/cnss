@@ -55,7 +55,7 @@ public class Simulator {
 	private int nextEventId = 0; // allows the generation of global events UUIDs
 	private int packet_counter = 0; // allows the generation of tracing packets sequence numbers
 
-	private int stop_time = 1200000; // 20 virtual minutes as time runs in virtual ms
+	private int stop_time = 600000;
 
 	/**
 	 * <code>Simulator</code> constructor, loads the configuration given the config
@@ -93,13 +93,16 @@ public class Simulator {
 	 * @param Simulator s, reference to the simulator object
 	 */
 	private void config(String filename) {
-		System.out.println("Reading file " + filename);
+		System.out.println("Reading file");
 		try {
 			BufferedReader input = new BufferedReader(new FileReader(filename));
 
 			String str;
+			int i = 0;
 			while ((str = input.readLine()) != null) {
+				// System.err.print(i+", ");
 				process_config_line(str);
+				i++;
 			}
 
 			input.close();
@@ -140,13 +143,21 @@ public class Simulator {
 	private void process_config_line(String s) {
 		String[] result = s.split("\\s");
 
-		if (result.length == 1)
-			return;
+		if (result.length == 1) return;
 
 		if (result[0].equalsIgnoreCase("parameter")) {
-			globalParameters.put(result[1], result[2]);
-			if (result[1].equals("stop"))
-				stop_time = Integer.parseInt(result[2]);
+			String name = result[1];
+			if ( result.length == 3 ) {
+				globalParameters.put(result[1], result[2]);
+				if (result[1].equalsIgnoreCase("stop"))
+					stop_time = Integer.parseInt(result[2]);
+			}
+			else if ( result.length == 2 ) 
+				globalParameters.put(result[1], "");
+			else {
+				System.err.println("config line - parameter with wrong number of arguments:"+s);
+				System.exit(-1);
+			}
 		}
 
 		else if (result[0].equalsIgnoreCase("node")) {
@@ -229,7 +240,7 @@ public class Simulator {
 		} else if (result[0].startsWith("#")) {
 			// skipping comments
 		} else {
-			System.out.println("Wrong config file line : " + s);
+			System.err.println("config line - wrong config line:"+s);
 			System.exit(-1);
 		}
 	}
@@ -372,8 +383,10 @@ public class Simulator {
 
 		while (events.size() > 0) {
 			now = events.get(events.firstKey()).getTime();
-			if (now > stop_time)
+			if (now > stop_time) {
+				check_completed();
 				break;
+			}
 			// process queued events scheduled for now and redistribute
 			// them by the corresponding nodes
 			process_events(now);
@@ -391,7 +404,6 @@ public class Simulator {
 			}
 		}
 		System.out.println("\nsimulation ended - last processing step with clock = " + now + "\n");
-		check_completed();
 	}
 
 	/**
@@ -427,10 +439,6 @@ public class Simulator {
 	 * 
 	 */
 	public void createMainQueueEvent(EventType op, int t, String[] a, Packet p, int n, int s) {
-		if (t > stop_time) {
-			// System.err.println("new event time older than stop_time");
-			return;
-		}
 		nextEventId++;
 		Event ev = new Event(op, t, nextEventId, a, p, n, s);
 		events.put(ev.getUUID(), ev);
@@ -446,10 +454,6 @@ public class Simulator {
 	 * 
 	 */
 	public void createMainQueueEvent(EventType op, int t, String[] a) {
-		if (t > stop_time) {
-			// System.err.println("new event time older than stop_time");
-			return;
-		}
 		nextEventId++;
 		Event ev = new Event(op, t, nextEventId, a);
 		events.put(ev.getUUID(), ev);
@@ -464,10 +468,6 @@ public class Simulator {
 	 * 
 	 */
 	public void createMainQueueEvent(Event e) {
-		if (e.getTime() > stop_time) {
-			// System.err.println("new event time older than stop_time");
-			return;
-		}
 		nextEventId++;
 		Event ev = new Event(e.getOperation(), e.getTime(), nextEventId, e.getArgs(), e.getPacket(), e.getNode(), e.getInterface());
 		events.put(ev.getUUID(), ev);
@@ -518,8 +518,7 @@ public class Simulator {
 	 */
 	private void check_completed() {
 		if (events.size() > 0) {
-			System.out.println("Error, " + events.size() + " events not run. Stoped too early?");
-			System.exit(-1);
+			System.out.println("\nwarning - " + events.size() + " events not run; stoped too early?");
 		}
 	}
 

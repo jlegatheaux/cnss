@@ -8,36 +8,40 @@ public class GlobalParameters {
 	private Map<String, String> vars;
 
 	/**
-	 * <code>GlobalVars</code> constructor, maintains a map of global variables
+	 * <code>GlobalVars</code> constructor, maintains a map of global variables or parameters
 	 */
 	public GlobalParameters() {
 		vars = new HashMap<>();
 	}
 
 	/**
-	 * Inserts a new variable in the map
+	 * Inserts a new (parameter, value) pair in the map
 	 * 
-	 * @param name  of the variable
-	 * @param value its value
+	 * @param name  of the parameter
+	 * @param value its (new) value
 	 */
 	public void put(String name, String value) {
-		if (vars.get(name) != null) {
-			System.err.println("Global vars map warning: double specification of var " + name);
-		}
 		vars.put(name, value);
 	}
 
 	/**
-	 * Gets the value of a variable from the map
+	 * Gets the value of a parameter from the map
 	 * 
-	 * @param name of the variable
+	 * @param name of the parameter 
 	 * @return value its value
 	 */
 	public String get(String name) {
-		if (vars.get(name) == null) {
-			System.err.println("Global vars map warning: undefined var " + name);
-		}
 		return vars.get(name);
+	}
+	
+	/**
+	 * Returns true if a parameter belongs to the map, false otherwise
+	 * 
+	 * @param name of the parameter
+	 * @return true if parameter belongs to the map
+	 */
+	public boolean containsKey(String name) {
+		return vars.containsKey(name);
 	}
 
 	/**
