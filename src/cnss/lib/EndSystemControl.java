@@ -56,7 +56,7 @@ public class EndSystemControl extends AbstractControlAlgorithm {
 			Packet localPacket = p.getCopy();
 			localPacket.setDestination(nodeObj.getId());
 			nodeObj.send(localPacket, LOCAL);
-			trace(now, "forwarded a copy of a broadcasted packet locally sent to this node");
+			trace(now, "forwarded a local copy of a broadcasted packet");
 		}
 		
 		if ( iface == LOCAL && links[0].isUp() ) { // locally sent packet
