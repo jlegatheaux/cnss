@@ -231,11 +231,18 @@ parameter stop 100000
 This parameter defines the duration of the simulation in virtual ms. It is good practice to make this the first line of the config file. This special parameter is directly recognized by the simulator. Other examples:
 
 ```
-parameter splithorizon true
-parameter expiration true
+parameter trace
+parameter filter
+parameter drop_duplicates
+parameter splithorizon
+parameter expiration
+parameter max_ttl 5
 ```
 
-which can be used to parametrize control algorithms.
+which can be used to parametrize control algorithms. The ones without an attached value may be used as flags like in:
+```java
+boolean drop_duplicates = parameters.containsKey("drop_duplicates");
+```
 
 ### Nodes
 
