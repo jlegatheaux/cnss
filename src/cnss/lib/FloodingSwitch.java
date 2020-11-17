@@ -26,6 +26,7 @@ public class FloodingSwitch implements ControlAlgorithm {
 		this.parameters = parameters;
 		this.links = links;
 		numInterfaces = nint;
+		tracingOn = parameters.containsKey("trace");
 		return 0;
 	}
 

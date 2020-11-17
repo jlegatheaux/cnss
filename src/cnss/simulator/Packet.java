@@ -17,11 +17,16 @@ public class Packet {
 	 * The size of a Packet with no payload - similar to IP
 	 */
 	public static int INITIALTTL = 32;
+	
 	/**
-	 * A packet with destination ONEHOP is directed to the first node that receives
-	 * it
+	 * A packet with destination ONEHOP is directed to the first node that receives it
 	 */
-	public static int ONEHOP = 1000000;
+	public static int ONEHOP = 10000;
+	
+	/**
+	 * A packet with destination BROADCAST is directed to all nodes
+	 */
+	public static int BROADCAST = 11111;
 
 	/**
 	 * The unknown address.
@@ -64,10 +69,10 @@ public class Packet {
 		System.arraycopy(this.payload, 0, copypl, 0, this.payload.length);
 		Packet copy = new Packet(src, dst, copypl);
 		copy.setType(type);
-		// copy.setPayload(copypl); because it is useless
 		copy.setTtl(ttl);
 		copy.setSequenceNumber(seq);
-		// copy.setSize(this.getSize()); because it is useless
+		// copy.setPayload(copypl) would be useless
+		// copy.setSize(this.getSize()) would be useless
 		return copy;
 	}
 
@@ -78,6 +83,15 @@ public class Packet {
 	 */
 	public int getSource() {
 		return src;
+	}
+	
+	/**
+	 * Sets the source address
+	 * 
+	 * @param s the source address
+	 */
+	public void setSource(int s) {
+		src = s;
 	}
 
 	/**
@@ -124,6 +138,15 @@ public class Packet {
 	public int getDestination() {
 		return dst;
 	}
+	
+	/**
+	 * Sets the destination address
+	 * 
+	 * @param d the new destination address
+	 */
+	public void setDestination(int d) {
+		dst = d;
+	}
 
 	/**
 	 * Sets the packet sequence number, this is for marking purposes.
@@ -132,6 +155,15 @@ public class Packet {
 	 */
 	public void setSequenceNumber(int s) {
 		seq = s;
+	}
+
+	/**
+	 * Gets the packet sequence number.
+	 * 
+	 * @param s sequence number
+	 */
+	public int getSequenceNumber() {
+		return seq;
 	}
 
 	/**
@@ -203,12 +235,19 @@ public class Packet {
 	    	System.err.println("toDataPacket: not a DataPacket");
 	    	System.exit(-1);
 	    }
-        byte[] copypl = new byte[payload.length];
-	    System.arraycopy(payload, 0, copypl, 0, payload.length);
-	    DataPacket copy = new DataPacket(src, dst, copypl);
-	    copy.setTtl(ttl);
-	    copy.setSequenceNumber(seq);
-	    return copy;    
+	    // a brute force copy
+        byte[] pl = new byte[this.payload.length];
+	    System.arraycopy(this.payload, 0, pl, 0, pl.length);
+	    DataPacket copy = new DataPacket(this.src, this.dst, pl);
+	    copy.setSource(this.src);
+	    copy.setDestination(this.dst);
+	    copy.setPayload(pl);
+	    copy.setTtl(this.ttl);
+	    copy.setSequenceNumber(this.seq);
+	    copy.setSize(this.size);
+	    copy.setType(PacketType.DATA);
+	    return copy;   
+	    
 	}
 
 }

@@ -25,6 +25,9 @@ abstract public class AbstractApplicationAlgorithm implements ApplicationAlgorit
 		this.nodeId = node_id;
 		return 0;
 	}
+	public void set_log(boolean log) {
+		this.logOn = log;
+	}
 
 	public void on_clock_tick(int now) {
 		log(now, "clock tick");

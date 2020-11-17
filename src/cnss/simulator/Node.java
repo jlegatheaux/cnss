@@ -1,5 +1,6 @@
 package cnss.simulator;
 
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -21,7 +22,7 @@ import cnss.simulator.Packet.PacketType;
 public class Node {
 
 	static final int LOCAL = -1; // the number of the virtual loop back interface
-	static final int UNKNOWN = -2; // an unknown interface - means do not know how
+	static final int UNKNOWN = -2; // an unknown interface - means do not know how to route, drop the packet
 
 	// The node specific state
 	private int node_id;
@@ -38,15 +39,15 @@ public class Node {
 	private Queue<Event> inputEvents = new LinkedList<>();
 	private Queue<Event> outputEvents = new LinkedList<>();
 	private GlobalParameters parameters;
-	private int app_clock_tick_period = 0;
-	private int control_clock_tick_period = 0;
-
-	// If a timeout event is received, it is only delivered if its
-	// timestamp is equal to this value. Thus, a new timeout cancels
-	// an old one. Any received packet also cancels a timeout by
-	// zeroing this variable
+	
+	// Time when next timeouts or clock tick events should be triggered
 	private int next_app_timeout = 0;
 	private int next_control_timeout = 0;
+	private int next_app_clock_tick = 0;
+	private int next_control_clock_tick = 0;
+	
+	private int app_clock_tick_period = 0;
+	private int control_clock_tick_period = 0;
 
 	// Packet counters
 	private int[] counter = new int[4];
@@ -117,21 +118,24 @@ public class Node {
 	}
 
 	/**
-	 * This <code>Node</code> starts by initializing the control and application
-	 * objects
+	 * This <code>Node</code> starts by initializing the control and application objects
 	 */
 	public void initialize() {
 		now = 0; // it is redundant, but ....
+		next_app_timeout = -1;
+		next_control_timeout = -1;
 		control_clock_tick_period = control_alg.initialise(now, node_id, this, parameters, links, num_interfaces);
 		app_clock_tick_period = app_alg.initialise(now, node_id, this, args);
-		if (control_clock_tick_period < 0)
-			control_clock_tick_period = 0;
-		if (app_clock_tick_period < 0)
-			control_clock_tick_period = 0;
-		if (control_clock_tick_period > 0)
-			outputEvents.add(new Event(EventType.CONTROL_CLOCK_TICK, control_clock_tick_period, 0, null, null, node_id, 0));
-		if (app_clock_tick_period > 0)
-			outputEvents.add(new Event(EventType.APP_CLOCK_TICK, app_clock_tick_period, 0, null, null, node_id, 0));
+		if (control_clock_tick_period <= 0) control_clock_tick_period = -1;
+		if (app_clock_tick_period <= 0) control_clock_tick_period = -1;
+		if (control_clock_tick_period > 0) {
+			next_control_clock_tick = control_clock_tick_period;
+			outputEvents.add(new Event(EventType.CLOCK_INTERRUPT, next_control_clock_tick, 0, null, null, node_id, 0));
+		}
+		if (app_clock_tick_period > 0) {
+			next_app_clock_tick = app_clock_tick_period;
+			outputEvents.add(new Event(EventType.CLOCK_INTERRUPT, next_app_clock_tick, 0, null, null, node_id, 0));
+		}
 	}
 
 	/**
@@ -198,7 +202,7 @@ public class Node {
 	 * @param now the current virtual time
 	 */
 	public void dumpPacketStats(int now) {
-		String s = "Pkt stats for node " + node_id + " : ";
+		String s = "Pkt stats for node " + node_id + " time "+now+" - ";
 		s = s + " s " + counter[SENT];
 		s = s + " r " + counter[RECV];
 		s = s + " d " + counter[DROP];
@@ -219,110 +223,88 @@ public class Node {
 		return node_id;
 	}
 
-	/**
-	 * In the same processing step the presence of <code>Packet</code> delivery
-	 * events cannot coexist with (same type) timeout events, since the reception
-	 * cancels the timeout but it is not guaranteed that packet delivery is treated
-	 * before timeouts
-	 */
-	private void clean_input_queue() {
-		boolean has_app_delivery = false;
-		boolean has_control_delivery = false;
-		// System.err.println("clean_input_events");
-		for (Event ev : inputEvents) {
-			if (ev.getOperation() == EventType.DELIVER_PACKET) {
-				if (ev.getPacket().getType() == PacketType.DATA)
-					has_app_delivery = true;
-				else if (ev.getPacket().getType() == PacketType.CONTROL)
-					has_control_delivery = true;
-			}
-		}
-		if (!has_app_delivery && !has_control_delivery)
-			return; // there are no packet deliver events
-
-		Queue<Event> newInputList = new LinkedList<>();
-		while (inputEvents.size() > 0) {
-			Event ev = inputEvents.poll();
-			if (ev.getOperation() == EventType.APP_TIMEOUT && has_app_delivery || ev.getOperation() == EventType.CONTROL_TIMEOUT && has_control_delivery) {
-				// remove from input list
-			} else
-				newInputList.add(ev);
-		}
-		inputEvents = newInputList;
-		// System.err.println("clean_input_events cleaned
-		// "+(inputEvents.size()-newInputList.size())+" events");
-	}
+	
 
 	/**
 	 * Process the <code>Event</code>s scheduled by the simulator for this
 	 * processing step
 	 */
 	public void process_input_events(int n) {
-		if (inputEvents.size() == 0)
-			return; // nothing to process
 		now = n;
-		clean_input_queue();
 		while (inputEvents.size() > 0) {
 			Event ev = inputEvents.poll(); // gets the head of the events queue and removes it
-			// System.err.println("process_input_events: processing: "+ev);
 			if (ev.getTime() != now) {
-				System.err.println("process_input_events: out of order event? " + ev);
+				System.out.println("node "+node_id+" at "+now+" process_events: event out of order " + ev);
 				System.exit(-1);
 			}
-			if (ev.getOperation() == EventType.UPLINK)
+			if (ev.getOperation() == EventType.UPLINK) {
+				System.out.println("node "+node_id+" at "+now+" interface "+ev.getInterface()+" going up");
 				control_alg.on_link_up(now, ev.getInterface());
-			else if (ev.getOperation() == EventType.DOWNLINK)
+			}
+			else if (ev.getOperation() == EventType.DOWNLINK) {
+				System.out.println("node "+node_id+" at "+now+" interface "+ev.getInterface()+" going down");
 				control_alg.on_link_down(now, ev.getInterface());
-			else if (ev.getOperation() == EventType.CONTROL_TIMEOUT) {
-				if (ev.getTime() == next_control_timeout)
-					control_alg.on_timeout(now); // the node is still waiting for this timeout
-				else {
-				}
-				; // ignore this timeout
-			} else if (ev.getOperation() == EventType.APP_TIMEOUT) {
-				if (ev.getTime() == next_app_timeout) // the node is still waiting for this timeout
-					app_alg.on_timeout(now);
-				else {
-				}
-				; // ignore this timeout
-			} else if (ev.getOperation() == EventType.CONTROL_CLOCK_TICK) {
-				control_alg.on_clock_tick(now);
-				outputEvents.add(new Event(EventType.CONTROL_CLOCK_TICK, now + control_clock_tick_period, 0, null, null, node_id, 0));
-			} else if (ev.getOperation() == EventType.APP_CLOCK_TICK) {
-				app_alg.on_clock_tick(now);
-				outputEvents.add(new Event(EventType.APP_CLOCK_TICK, now + app_clock_tick_period, 0, null, null, node_id, 0));
-			} else if (ev.getOperation() == EventType.DELIVER_PACKET) {
+			}
+			else if (ev.getOperation() == EventType.DELIVER_PACKET) {
+				
 				Packet p = ev.getPacket();
 				if (p.getTtl() == 1) {
 					counter[DROP]++;
-					System.out.println("Dropping expired packet " + p);
-					return; // ignore packet
+					System.out.println("--> node "+node_id+" at "+now+" dropping expired packet " + p);
+					continue; // ignore packet
 				}
-				if (p.getDestination() == node_id || p.getDestination() == Packet.ONEHOP) { // local packet
-					// System.out.println("Received packet "+p);
+				if (p.getDestination() == node_id ) { // local packet
 					counter[RECV]++;
 					if (p.getType() == PacketType.DATA) {
 						next_app_timeout = 0; // cancels all waiting timeouts
-						app_alg.on_receive(now, p.toDataPacket() );
+						app_alg.on_receive(now, p.toDataPacket()); // delivers an exact copy of the packet
 					} else if (p.getType() == PacketType.CONTROL) {
 						next_control_timeout = 0; // cancels all waiting timeouts
 						control_alg.on_receive(now, p, ev.getInterface());
 					} else if (p.getType() == PacketType.TRACING) {
 						// make the result of the tracing available
-						System.out.println("Received tracing packet at time " + now + " " + p);
+						System.out.println("node "+node_id+" at "+now+" received tracing packet with path " 
+						+ new String(p.getPayload(), StandardCharsets.UTF_8)+ " -> "+node_id);
 					} else {
-						System.err.println("Node process_events: unknown received packet type " + p);
+						System.out.println("node "+node_id+" at "+now+" process_events: unknown packet type " + p);
 						System.exit(-1);
 					}
-				} else { // not a local packet, forward it
+				} else { // forward it
 					p.decrementTtl();
+					if (p.getType() == PacketType.TRACING) {
+						String tmp;
+						if ( p.getSource() == node_id) { // TODO: this way a loop is not detect
+							// it is a tracing packet sent initially by this node
+							counter[SENT]++;
+							ev.setInterface(LOCAL);
+							// set the sequence number now
+							packet_counter++;
+							p.setSequenceNumber(packet_counter);
+							tmp = " -> source: "+node_id;
+						}
+						else tmp = new String(p.getPayload(), StandardCharsets.UTF_8)+" -> "+node_id;
+						p.setPayload(tmp.getBytes());
+					}
 					counter[FORW]++;
 					control_alg.forward_packet(now, p, ev.getInterface());
 				}
-			} else {
-				System.out.println("Node process_events: Unknown event " + ev);
-			}
+			} // end of  EventType.DELIVER_PACKET
+			else if ( ev.getOperation() == EventType.CLOCK_INTERRUPT ) {}
+			else System.out.println("node process_events: Unknown event " + ev);
 		}
+		// now process CLOCK INTERRUPTS
+		if ( next_control_clock_tick == now) {
+			control_alg.on_clock_tick(now);
+			next_control_clock_tick = now + control_clock_tick_period;
+			outputEvents.add(new Event(EventType.CLOCK_INTERRUPT, next_control_clock_tick, 0, null, null, node_id, 0));
+		}
+		if ( next_app_clock_tick == now) {
+			app_alg.on_clock_tick(now);
+			next_app_clock_tick = now + app_clock_tick_period;
+			outputEvents.add(new Event(EventType.CLOCK_INTERRUPT, next_app_clock_tick, 0, null, null, node_id, 0));
+		}
+		if ( next_control_timeout == now) control_alg.on_timeout(now);
+		if ( next_app_timeout == now) app_alg.on_timeout(now);
 	}
 
 	/***************************************************************************
@@ -333,33 +315,34 @@ public class Node {
 
 	/**
 	 * Sends an application <code>DataPacket</code>; by convention the input
-	 * interface of a locally created and sent packet is the local interface (-1)
+	 * interface of a locally created and sent packet is the LOCAL interface (-1)
 	 * this method is to be be used by the application algorithm
 	 * 
 	 * @param p the packet
 	 */
 	public void send(DataPacket p) {
+		// all packets sent locally are counted as sent and forwarded
 		if (p == null) {
 			System.err.println("send: no packet to send");
 			System.exit(-1);
 		}
 		if (p.getSource() != node_id) {
-			System.err.println("send: can only send local origin packets");
+			System.err.println("send: can only send local originated packets");
 			System.exit(-1);
 		}
 		if (p.getType() != PacketType.DATA) {
 			System.err.println("send: can only send data packets");
 			System.exit(-1);
 		}
-		if (p.getDestination() == node_id) { // local delivery
-			outputEvents.add(new Event(EventType.DELIVER_PACKET, now + 1, 0, null, p, node_id, LOCAL));
-		} else
-			control_alg.forward_packet(now, p, LOCAL);
+		// counter[SENT] will be incremented when the packet is sent by the forwarding process
+		counter[FORW]++;
+		control_alg.forward_packet(now, p, LOCAL);
+		
 	}
 
 	/**
-	 * Sends a <code>Packet</code> using a given interface Besides increasing
-	 * counters, this could be done by Control Algorithms It is however, cleaner and
+	 * Sends a <code>Packet</code> using a given interface. Besides increasing
+	 * counters, this could be done by Control Algorithms. It is however, cleaner and
 	 * better practice to make it available here to be shared by all different
 	 * ControlAlgorithms
 	 * 
@@ -371,17 +354,19 @@ public class Node {
 			System.err.println("control_send: no packet to send");
 			System.exit(-1);
 		}
-		if (iface == LOCAL || p.getDestination() == node_id) {
-			// local delivery
-			outputEvents.add(new Event(EventType.DELIVER_PACKET, now + 1, 0, null, p, node_id, LOCAL));
-			counter[SENT]++;
-		} else if (iface == UNKNOWN || iface >= num_interfaces) {
+		if (iface == UNKNOWN || iface >= num_interfaces) {
 			// drop the packet since it is impossible to send it
 			counter[DROP]++;
-		} else {
-			links[iface].enqueuePacket(node_id, p); // the link side is relative to the node calling it
-			counter[SENT]++;
 		}
+		else if (p.getDestination() == node_id) {
+			// locally forwarded or sent directly to the node itself
+			Event ev = new Event(EventType.DELIVER_PACKET, now + 1, 0, null, p, node_id, LOCAL);
+			outputEvents.add(ev);
+		}	
+		else {
+			links[iface].enqueuePacket(node_id, p); // the link side is relative to the node calling it
+		}
+		counter[SENT]++;
 	}
 
 	/**
@@ -414,7 +399,7 @@ public class Node {
 	}
 
 	/**
-	 * Installs an application timeout The reception of a data message before or at
+	 * Installs an application timeout. The reception of a data message before or at
 	 * now+t cancels all application timeouts (including those to be delivered in
 	 * the same time step)
 	 * 
@@ -425,8 +410,8 @@ public class Node {
 			System.err.println("set_app_timeout: timeout value must be >= 1");
 			System.exit(-1);
 		}
-		next_app_timeout = now + t; // next expected timeout
-		outputEvents.add(new Event(EventType.APP_TIMEOUT, next_app_timeout, 0, null, null, node_id, 0));
+		next_app_timeout = now + t; // next expected control timeout
+		outputEvents.add(new Event(EventType.CLOCK_INTERRUPT, next_app_timeout, 0, null, null, node_id, 0));
 	}
 
 	/**
@@ -441,14 +426,14 @@ public class Node {
 			System.err.println("set_control_timeout: timeout value must be >= 1");
 			System.exit(-1);
 		}
-		next_control_timeout = now + t; // next expected timeout
-		outputEvents.add(new Event(EventType.CONTROL_TIMEOUT, next_control_timeout, 0, null, null, node_id, 0));
+		next_control_timeout = now + t; // next expected app timeout
+		outputEvents.add(new Event(EventType.CLOCK_INTERRUPT, next_control_timeout, 0, null, null, node_id, 0));
 	}
 
 	/**
-	 * Creates a data packet with the current node as sender the
-	 * ApplicationAlgorithm could implement the functionality but setting a good
-	 * sequence number
+	 * Creates a data packet with the current node as sender.
+	 * ApplicationAlgorithm could implement the same functionality
+	 * but setting an unique sequence number
 	 * 
 	 * @param receiver the receiver id
 	 * @param payload  the payload of the packet
@@ -462,8 +447,9 @@ public class Node {
 	}
 
 	/**
-	 * Creates a control packet the ControlAlgorithm could implement the
-	 * functionality but setting a good sequence number
+	 * Creates a control packet with the current node as sender.
+	 * ControlAlgorithm could implement the same functionality
+	 * but setting an unique sequence number
 	 * 
 	 * @param sender   the sender id
 	 * @param receiver the receiver id

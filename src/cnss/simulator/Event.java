@@ -11,11 +11,12 @@ package cnss.simulator;
 public class Event {
 
 	public static enum EventType {
-		UNKNOWN, TRACEROUTE, UPLINK, DOWNLINK, DUMP_RT, DUMP_PACKETS, APP_CLOCK_TICK, CONTROL_CLOCK_TICK, APP_TIMEOUT, CONTROL_TIMEOUT, DELIVER_PACKET,
-		DUMP_CONTROLSTATE, DUMP_APPSTATE
+		UNKNOWN, TRACEROUTE, UPLINK, DOWNLINK, DUMP_RT, DUMP_PACKETS, 		
+		DELIVER_PACKET,
+		DUMP_CONTROLSTATE, DUMP_APPSTATE, CLOCK_INTERRUPT
 	}
 
-	public static long DISPLACEMENT = 1000000; // # of != events per processing step
+	public static long DISPLACEMENT = 1000000; // # of max != events per processing step
 
 	private EventType operation;
 	private long uuid;
@@ -207,8 +208,8 @@ public class Event {
 	}
 
 	/**
-	 * Generic toString method which describes the event and its arguments. TODO: it
-	 * ignores the optional field packet
+	 * Generic toString method which describes the event and its arguments. 
+	 * TODO: by the moment, it ignores the optional field packet
 	 * 
 	 * @return String
 	 */
@@ -221,26 +222,13 @@ public class Event {
 			}
 		}
 		s = s + " (node " + node + ")";
-		// +" interface "+itface;
+		if ( operation == EventType.DELIVER_PACKET) {
+			s = s +" interface "+itface;
+			s = s +" packet "+packet;
+		}
 		return s;
 	}
 
-	/**
-	 * Generic clone method to make an exact copy of an event
-	 * 
-	 * @return a clone of the event
-	 */
-	@Override
-	public Event clone() {
-		Event clone;
-		try {
-			clone = (Event) super.clone();
-		} catch (CloneNotSupportedException ex) {
-			throw new RuntimeException("superclass messed up", ex);
-		}
-		clone.args = args.clone();
-		return clone;
-	}
 
 	/**
 	 * Auxiliary method of toString().

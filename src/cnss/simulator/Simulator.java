@@ -53,7 +53,7 @@ public class Simulator {
 	private SortedMap<Long, Event> events = new TreeMap<>();
 
 	private int nextEventId = 0; // allows the generation of global events UUIDs
-	private int packet_counter = 0; // allows the generation of tracing packets sequence numbers
+//	private int packet_counter = 0; // allows the generation of tracing packets sequence numbers
 
 	private int stop_time = 600000;
 
@@ -65,7 +65,6 @@ public class Simulator {
 	 */
 	public Simulator(String cf) {
 		config_file = cf;
-
 		System.out.println("Loading configuration : " + config_file);
 		config(config_file);
 	}
@@ -165,8 +164,7 @@ public class Simulator {
 			for (int i = 0; i < args.length; i++)
 				args[i] = result[i + 5];
 			Node nd = new Node(Integer.parseInt(result[1]), Integer.parseInt(result[2]), result[3], result[4], args, globalParameters);
-			// result[1] = node id, result[2] = # interfaces, result[3] = control class
-			// name,
+			// result[1] = node id, result[2] = # interfaces, result[3] = control class name,
 			// result[4] = app class name result[5] = args[0] .....
 			tmp_nodes.add(nd);
 		}
@@ -188,8 +186,7 @@ public class Simulator {
 			tmp_links.add(l);
 		}
 
-		// in all the following events, their packet, node and interface parameters are
-		// not used
+		// in all the following events, their packet, node and interface parameters are not used
 
 		else if (result[0].equalsIgnoreCase("traceroute") ||
 				 result[0].equalsIgnoreCase("trace_route")) {
@@ -252,10 +249,9 @@ public class Simulator {
 	 **********************************************************************/
 
 	/**
-	 * Process the events scheduled for the time <code>now</code>
+	 * Process the events scheduled for time <code>now</code>
 	 * 
 	 * @param now current time
-	 * @return true if some event has been processed, false otherwise
 	 */
 	private void process_events(int now) {
 		while (events.size() > 0) {
@@ -267,13 +263,12 @@ public class Simulator {
 			events.remove(uuid);
 
 			switch (ev.getOperation()) {
+			// we start by events directly set in the configuration file
 			case TRACEROUTE:
-				// a new tracing packet is created and the origin node starts its forwarding
-				// the source node will proceed by sending the packet
-
-				Packet packet = new TracingPacket(Integer.parseInt(ev.getArgument(0)), Integer.parseInt(ev.getArgument(1)), "".getBytes());
-				packet_counter++;
-				packet.setSequenceNumber(packet_counter);
+				// a new tracing packet is created; the source node will start its forwarding
+				Packet packet = new TracingPacket(Integer.parseInt(ev.getArgument(0)), Integer.parseInt(ev.getArgument(1)), new byte[0]);
+				// the packet sequence number is a dummy one; only when sent be the first node it will be set correctly
+				packet.setSequenceNumber(-1);
 				ev.setPacket(packet);
 				ev.setNode(packet.getSource());
 				ev.setOperation(EventType.DELIVER_PACKET);
@@ -284,18 +279,17 @@ public class Simulator {
 			case DOWNLINK:
 				for (int i = 0; i < links.length; i++) {
 					if (links[i].getNode(1) == Integer.parseInt(ev.getArgument(0)) && links[i].getInterface(1) == Integer.parseInt(ev.getArgument(1))
-							&& links[i].getNode(2) == Integer.parseInt(ev.getArgument(2)) && links[i].getInterface(1) == Integer.parseInt(ev.getArgument(3))) {
+							&& links[i].getNode(2) == Integer.parseInt(ev.getArgument(2)) && links[i].getInterface(2) == Integer.parseInt(ev.getArgument(3))) {
 						if (ev.getOperation() == EventType.UPLINK) {
-							System.out.println("Setting link status to up " + links[i]);
 							links[i].setState(true);
 						} else {
-							System.out.println("Setting link status to down " + links[i]);
 							links[i].setState(false);
 						}
 						// the two sides of the link must be notified;
 						ev.setNode(links[i].getNode(1));
 						ev.setInterface(links[i].getInterface(1));
-						Event ev2 = ev.clone();
+						// only the operation, node and interface of this event will be used by the node
+						Event ev2 = new Event(ev.getOperation(), ev.getTime(), 1, new String[0]);
 						ev2.setNode(links[i].getNode(2));
 						ev2.setInterface(links[i].getInterface(2));
 						nodes[links[i].getNode(1)].addInputEvent(ev);
@@ -313,7 +307,6 @@ public class Simulator {
 				}
 				break;
 			case DUMP_PACKETS: // Immediately executed
-				// System.out.println("event "+ev);
 				if (ev.getArgument(0).equals("all")) {
 					for (int i = 0; i < nodes.length; i++) {
 						nodes[i].dumpPacketStats(now);
@@ -323,7 +316,6 @@ public class Simulator {
 				}
 				break;
 			case DUMP_CONTROLSTATE: // Immediately executed
-				// System.out.println("event "+ev);
 				if (ev.getArgument(0).equals("all")) {
 					for (int i = 0; i < nodes.length; i++) {
 						nodes[i].dumpControlState(now);
@@ -333,7 +325,6 @@ public class Simulator {
 				}
 				break;
 			case DUMP_APPSTATE: // Immediately executed
-				// System.out.println("event "+ev);
 				if (ev.getArgument(0).equals("all")) {
 					for (int i = 0; i < nodes.length; i++) {
 						nodes[i].dumpAppState(now);
@@ -342,11 +333,10 @@ public class Simulator {
 					nodes[Integer.parseInt(ev.getArgument(0))].dumpAppState(now);
 				}
 				break;
-			case CONTROL_TIMEOUT:
-			case APP_TIMEOUT:
+	
+				
 			case DELIVER_PACKET:
-			case CONTROL_CLOCK_TICK:
-			case APP_CLOCK_TICK:
+			case CLOCK_INTERRUPT:
 				nodes[ev.getNode()].addInputEvent(ev);
 				break;
 			default:
@@ -359,10 +349,10 @@ public class Simulator {
 	/**
 	 * Main loop of the simulator that runs through all the tasks at each time step.
 	 * At each time step with events to process, the Simulator carries out (in
-	 * order): event processing <code>process_events</code>, for each node processes
-	 * nodes tasks <code>process_input_events</code> and puts in the main queue
-	 * event the new events generated it generates and then processes the
-	 * transmission of packets <code>process_packets</code> by all links.
+	 * order): global event processing <code>process_events</code>, then, for each node,
+	 * processes nodes tasks <code>process_input_events</code> and finally, puts in the main queue
+	 * new events generated by node and processes the transmission of packets
+	 * <code>process_packets</code> in all links.
 	 */
 	public void main_loop() {
 		System.out.println("\nsimulation starts - first processing step with clock = 0\n");
@@ -370,11 +360,12 @@ public class Simulator {
 		// nodes are initialized at time step 0
 		nextEventId = 0;
 		int now = 0;
+		// initialize all nodes
 		for (int i = 0; i < nodes.length; i++) {
 			nodes[i].initialize();
 			enqueue_generated_events(nodes[i], now);
 		}
-		// transmit the enqueued packets by initialization of nodes and
+		// transmit packets sent during initialization of nodes
 		// enqueue in the global queue the generated delivery events
 		for (int i = 0; i < links.length; i++) {
 			links[i].transmitPackets(0);
@@ -387,8 +378,7 @@ public class Simulator {
 				check_completed();
 				break;
 			}
-			// process queued events scheduled for now and redistribute
-			// them by the corresponding nodes
+			// process queued events scheduled for now 
 			process_events(now);
 			// make each node to process its events and enqueue in the
 			// global queue the events it generates
@@ -396,8 +386,8 @@ public class Simulator {
 				nodes[i].process_input_events(now);
 				enqueue_generated_events(nodes[i], now);
 			}
-			// transmit the enqueued packets by nodes and enqueue in the
-			// global queue the generated delivery events
+			// transmit packets sent during this time step and
+			// enqueue in the global queue the generated delivery events
 			for (int i = 0; i < links.length; i++) {
 				links[i].transmitPackets(now);
 				enqueue_packets_to_deliver(links[i], now);
@@ -456,6 +446,23 @@ public class Simulator {
 	public void createMainQueueEvent(EventType op, int t, String[] a) {
 		nextEventId++;
 		Event ev = new Event(op, t, nextEventId, a);
+		events.put(ev.getUUID(), ev);
+		// System.out.println("Adding "+ev);
+	}
+	
+	/**
+	 * Creates a new event with appropriate uuid and adds it to the main event queue
+	 * 
+	 * @param op the operation of the event.
+	 * @param t  the time the event should be triggered.
+	 * @param a  String[] parameters of the event.
+	 * 
+	 */
+	public void createMainQueueEvent(EventType op, int t, String[] a, int node, int iface) {
+		nextEventId++;
+		Event ev = new Event(op, t, nextEventId, a);
+		ev.setNode(node);
+		ev.setInterface(iface);
 		events.put(ev.getUUID(), ev);
 		// System.out.println("Adding "+ev);
 	}

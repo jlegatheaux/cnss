@@ -1,5 +1,6 @@
 package cnss.simulator;
 
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
@@ -191,12 +192,15 @@ public class Link {
 	 * p the Packet to be processed
 	 */
 	void ProcessNextPacket1 (Packet p) {
-		if (p.getType() == PacketType.TRACING) {
-			// add the link crossed to the path - time is when the packet will start being transmitted
-			String trace = p.getPayload().toString() + "time " 
-					+ timeOfLastBitTransmitted1 + " " + node1 + "." + iface1 + "->" + node2 + "." + iface2;
-			p.setPayload(trace.getBytes());
-		}
+		
+		// TODO: is it necessary to get the tracing done here? By the moment is by the node.
+//		if (p.getType() == PacketType.TRACING) {
+//			// add the link crossed to the path - time is when the packet will start being transmitted
+//			String trace = new String(p.getPayload(), StandardCharsets.UTF_8)+ " time " 
+//					+ timeOfLastBitTransmitted1 + " " + node1 + "." + iface1 + " -> " + node2 + "." + iface2;
+//			p.setPayload(trace.getBytes());
+//		}
+		
 		double transmissionTime = ((double) p.getSize()) * 8.0 * 1000.0 / (double) bwidth; // all in ms
 		double varLat = 0.0;
 		if ( randomJitt != null ) varLat = (double) randomJitt.nextInt(10000)/10000 * jitter * transmissionTime;
@@ -217,12 +221,14 @@ public class Link {
 	 * p the Packet to be processed
 	 */
 	void ProcessNextPacket2 (Packet p) {
-		if (p.getType() == PacketType.TRACING) {
-			// add the link crossed to the path - time is when the packet will start being transmitted
-			String trace = p.getPayload().toString() + "time " 
-					+ timeOfLastBitTransmitted2 + " " + node2 + "." + iface2 + "->" + node1 + "." + iface1;
-			p.setPayload(trace.getBytes());
-		}
+		// TODO: the  same as above
+//		if (p.getType() == PacketType.TRACING) {
+//			// add the link crossed to the path - time is when the packet will start being transmitted
+//			String trace = p.getPayload().toString() + "time " 
+//					+ timeOfLastBitTransmitted2 + " " + node2 + "." + iface2 + "->" + node1 + "." + iface1;
+//			p.setPayload(trace.getBytes());
+//		}
+		
 		double transmissionTime = ((double) p.getSize()) * 8.0 * 1000.0 / (double) bwidth; // all in ms
 		double varLat = 0.0;
 		if ( randomJitt != null ) varLat = (double) randomJitt.nextInt(10000)/10000 * jitter * transmissionTime;
@@ -345,11 +351,11 @@ public class Link {
 	 * @return string representation of packet counters.
 	 */
 	public String dumpPacketStats() {
-		String s = "(Node1:" + node1 + " I1:" + iface1 + ")";
-		s = s + " s " + counter1_in + " r " + counter1_out;
-		s = s + "<-->";
-		s = s + "(Node2:" + node2 + " I2:" + iface2 + ")";
-		s = s + " s " + counter2_in + " r " + counter2_out;
+		String s = "  (node:" + node1 + " ifc:" + iface1 + ")";
+		s = s + " r " + counter1_in + " s " + counter1_out;
+		s = s + " <-->";
+		s = s + " (node:" + node2 + " ifc:" + iface2 + ")";
+		s = s + " r " + counter2_in + " s " + counter2_out;
 		return s;
 	}
 
