@@ -355,48 +355,22 @@ public class Node {
 			System.exit(-1);
 		}
 		if (iface == UNKNOWN || iface >= num_interfaces) {
-			// drop the packet since it is impossible to send it
+			// increase counters and drop the packet since it is impossible to send it
 			counter[DROP]++;
 		}
 		else if (p.getDestination() == node_id) {
 			// locally forwarded or sent directly to the node itself
 			Event ev = new Event(EventType.DELIVER_PACKET, now + 1, 0, null, p, node_id, LOCAL);
 			outputEvents.add(ev);
+			counter[SENT]++;
 		}	
 		else {
 			links[iface].enqueuePacket(node_id, p); // the link side is relative to the node calling it
+			counter[SENT]++;
 		}
-		counter[SENT]++;
 	}
 
-	/**
-	 * Returns the interface weight for the specified interface. This may or should
-	 * be computed by Control Algorithms. However, it is given as an help and
-	 * example
-	 * 
-	 * @param iface
-	 * @param type  (= 1, weight always 1 for RIP, 2 weight better than RIP weight ,
-	 *              3 weight for OSPF
-	 * @return int (weight)
-	 */
-	public int getInterfaceWeight(int iface, int type) {
-		if (iface == ControlAlgorithm.LOCAL) {
-			return 0;
-		} // loopback interfaces have no cost
-		long bandwith = links[iface].getBandWidth();
-		int result = 1;
-		if (type == 3)
-			return (int) (1000000000.0 / bandwith); // ref. is 1000 Mbps
-		else if (type == 2) { // Discrete values
-			if (bandwith <= 1000000)
-				result = 3;
-			else if (bandwith <= 10000000)
-				result = 2;
-			else
-				result = 1;
-		}
-		return result;
-	}
+	
 
 	/**
 	 * Installs an application timeout. The reception of a data message before or at
@@ -470,7 +444,7 @@ public class Node {
 	 * @return boolean (true if is Up)
 	 */
 	public boolean getInterfaceState(int iface) {
-		// If the interface value is -1, it is the virtual loop back interface, so
+		// If the interface value is -1 (LOCAL), it is the virtual loop back interface, so
 		// it is always up.
 		if (iface == LOCAL) {
 			return true;
