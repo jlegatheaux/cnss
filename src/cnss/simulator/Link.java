@@ -351,11 +351,12 @@ public class Link {
 	 * @return string representation of packet counters.
 	 */
 	public String dumpPacketStats() {
-		String s = "  (node:" + node1 + " ifc:" + iface1 + ")";
-		s = s + " r " + counter1_in + " s " + counter1_out;
-		s = s + " <-->";
-		s = s + " (node:" + node2 + " ifc:" + iface2 + ")";
-		s = s + " r " + counter2_in + " s " + counter2_out;
+		String s = up ? " u " : " d ";
+		s += "(node:" + node1 + " ifc:" + iface1 + ")";
+		s += " r " + counter1_in + " s " + counter1_out;
+		s += " <-->";
+		s += " (node:" + node2 + " ifc:" + iface2 + ")";
+		s += " r " + counter2_in + " s " + counter2_out;
 		return s;
 	}
 

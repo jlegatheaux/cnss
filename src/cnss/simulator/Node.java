@@ -126,8 +126,6 @@ public class Node {
 		next_control_timeout = -1;
 		control_clock_tick_period = control_alg.initialise(now, node_id, this, parameters, links, num_interfaces);
 		app_clock_tick_period = app_alg.initialise(now, node_id, this, args);
-		if (control_clock_tick_period <= 0) control_clock_tick_period = -1;
-		if (app_clock_tick_period <= 0) control_clock_tick_period = -1;
 		if (control_clock_tick_period > 0) {
 			next_control_clock_tick = control_clock_tick_period;
 			outputEvents.add(new Event(EventType.CLOCK_INTERRUPT, next_control_clock_tick, 0, null, null, node_id, 0));
@@ -202,7 +200,7 @@ public class Node {
 	 * @param now the current virtual time
 	 */
 	public void dumpPacketStats(int now) {
-		String s = "Pkt stats for node " + node_id + " time "+now+" - ";
+		String s = "\nPkt stats for node " + node_id + " time "+now+" - ";
 		s = s + " s " + counter[SENT];
 		s = s + " r " + counter[RECV];
 		s = s + " d " + counter[DROP];
@@ -222,77 +220,127 @@ public class Node {
 	public int getId() {
 		return node_id;
 	}
+	
+	
+	/******************************************************************************
+	 * 
+	 * Methods for processing the events scheduled by the simulator for this node
+	 * 
+	 ******************************************************************************/
+	
+	/**
+	 * Process the dropping of a <code>Packet</code> 
+	 * 
+	 * @param p the packet to be dropped
+	 * @param now the current time stamp
+	 */
+	private void process_packet_to_drop (Packet p, int now) {
+		String message = new String("--> node "+node_id+" at "+now+" dropping expired ");
+		if (p.getType() == PacketType.DATA) message += "packet "+p;
+		else if (p.getType() == PacketType.CONTROL) message += "packet "+p;
+		else if (p.getType() == PacketType.TRACING) 
+			message += "trace route packet "+new String(p.getPayload(), StandardCharsets.UTF_8);
+		System.out.println(message);
+	}
+	
+	/**
+	 * Process a tracing <code>Packet</code> to be forwarded
+	 * 
+	 * @param p the <code>Packet</code> to be dropped
+	 * @param ev the <code>Event</code> containing that packet
+	 * @param now the current time stamp
+	 */
+	private void process_tracing_packet_to_forward (Packet p, Event ev, int now) {
+		String tmp;
+		if ( p.getSource() == node_id && p.getTtl() == Packet.INITIALTTL-1) {
+			// it is a tracing packet being sent now
+			counter[SENT]++;
+			ev.setInterface(LOCAL);
+			// set the sequence number now
+			packet_counter++;
+			p.setSequenceNumber(packet_counter);
+			tmp = " "+node_id;
+			System.out.println("--> node "+node_id+" time "+now+" traceroute to: "+p.getDestination());
+		}
+		else tmp = new String(p.getPayload(), StandardCharsets.UTF_8)+" -> "+node_id;
+		p.setPayload(tmp.getBytes());
+	}
+	
+	
+	
+	/**
+	 * Process a DELIVER_PACKET <code>Event</code> 
+	 * 
+	 * @param ev the event to be processed
+	 * @param now the current time stamp
+	 */
+	private void process_deliver_packet_event (Event ev, int now) {
+
+		Packet p = ev.getPacket();
+		if (p.getTtl() == 1) {
+			process_packet_to_drop(p,now);
+			return; 
+		}	
+		if (p.getDestination() == node_id || p.getDestination() == Packet.ONEHOP) { // local packet
+			counter[RECV]++;
+			if (p.getType() == PacketType.DATA) {
+				next_app_timeout = 0; // cancels all waiting timeouts
+				app_alg.on_receive(now, p.toDataPacket()); // delivers an exact copy of the packet
+			} else if (p.getType() == PacketType.CONTROL) {
+				next_control_timeout = 0; // cancels all waiting timeouts
+				control_alg.on_receive(now, p, ev.getInterface());
+			} else if (p.getType() == PacketType.TRACING) {
+				// make the result of the tracing available
+				System.out.println("--> node "+node_id+" time "+now+" received traceroute: " 
+				+ new String(p.getPayload(), StandardCharsets.UTF_8)+ " -> "+node_id);
+			} else {
+				panic("--> node "+node_id+" at "+now+" process_deliver_packet: unknown packet type " + p);
+			}
+			
+		} else { // forward it
+			p.decrementTtl();
+			if (p.getType() == PacketType.TRACING) process_tracing_packet_to_forward (p, ev, now);	
+			counter[FORW]++;
+			control_alg.forward_packet(now, p, ev.getInterface());
+		}
+	}
 
 	
 
 	/**
 	 * Process the <code>Event</code>s scheduled by the simulator for this
 	 * processing step
+	 * 
+	 * @param n the current time stamp
 	 */
 	public void process_input_events(int n) {
 		now = n;
 		while (inputEvents.size() > 0) {
 			Event ev = inputEvents.poll(); // gets the head of the events queue and removes it
 			if (ev.getTime() != now) {
-				System.out.println("node "+node_id+" at "+now+" process_events: event out of order " + ev);
-				System.exit(-1);
+				panic("--> node "+node_id+" at "+now+" process_events: event out of order " + ev);
 			}
 			if (ev.getOperation() == EventType.UPLINK) {
-				System.out.println("node "+node_id+" at "+now+" interface "+ev.getInterface()+" going up");
+				System.out.println("--> node "+node_id+" at "+now+" interface "+ev.getInterface()+" going up");
 				control_alg.on_link_up(now, ev.getInterface());
 			}
 			else if (ev.getOperation() == EventType.DOWNLINK) {
-				System.out.println("node "+node_id+" at "+now+" interface "+ev.getInterface()+" going down");
+				System.out.println("--> node "+node_id+" at "+now+" interface "+ev.getInterface()+" going down");
 				control_alg.on_link_down(now, ev.getInterface());
 			}
 			else if (ev.getOperation() == EventType.DELIVER_PACKET) {
-				
-				Packet p = ev.getPacket();
-				if (p.getTtl() == 1) {
-					counter[DROP]++;
-					System.out.println("--> node "+node_id+" at "+now+" dropping expired packet " + p);
-					continue; // ignore packet
-				}
-				if (p.getDestination() == node_id ) { // local packet
-					counter[RECV]++;
-					if (p.getType() == PacketType.DATA) {
-						next_app_timeout = 0; // cancels all waiting timeouts
-						app_alg.on_receive(now, p.toDataPacket()); // delivers an exact copy of the packet
-					} else if (p.getType() == PacketType.CONTROL) {
-						next_control_timeout = 0; // cancels all waiting timeouts
-						control_alg.on_receive(now, p, ev.getInterface());
-					} else if (p.getType() == PacketType.TRACING) {
-						// make the result of the tracing available
-						System.out.println("node "+node_id+" at "+now+" received tracing packet with path " 
-						+ new String(p.getPayload(), StandardCharsets.UTF_8)+ " -> "+node_id);
-					} else {
-						System.out.println("node "+node_id+" at "+now+" process_events: unknown packet type " + p);
-						System.exit(-1);
-					}
-				} else { // forward it
-					p.decrementTtl();
-					if (p.getType() == PacketType.TRACING) {
-						String tmp;
-						if ( p.getSource() == node_id) { // TODO: this way a loop is not detect
-							// it is a tracing packet sent initially by this node
-							counter[SENT]++;
-							ev.setInterface(LOCAL);
-							// set the sequence number now
-							packet_counter++;
-							p.setSequenceNumber(packet_counter);
-							tmp = " -> source: "+node_id;
-						}
-						else tmp = new String(p.getPayload(), StandardCharsets.UTF_8)+" -> "+node_id;
-						p.setPayload(tmp.getBytes());
-					}
-					counter[FORW]++;
-					control_alg.forward_packet(now, p, ev.getInterface());
-				}
-			} // end of  EventType.DELIVER_PACKET
-			else if ( ev.getOperation() == EventType.CLOCK_INTERRUPT ) {}
-			else System.out.println("node process_events: Unknown event " + ev);
+				process_deliver_packet_event (ev, now);
+			}
+			else if ( ev.getOperation() == EventType.CLOCK_INTERRUPT ) {
+				// clock interrupt events will all be processed after all other type of events
+				// System.out.println("node process_events: clock interrupt event " + ev);
+			}
+			else {
+				panic("--> node process_events: unknown event " + ev);
+			}
 		}
-		// now process CLOCK INTERRUPTS
+		
+		// all events are processed, now process CLOCK INTERRUPTS
 		if ( next_control_clock_tick == now) {
 			control_alg.on_clock_tick(now);
 			next_control_clock_tick = now + control_clock_tick_period;
@@ -307,6 +355,7 @@ public class Node {
 		if ( next_app_timeout == now) app_alg.on_timeout(now);
 	}
 
+	
 	/***************************************************************************
 	 * 
 	 * Algorithms down calls
@@ -322,19 +371,10 @@ public class Node {
 	 */
 	public void send(DataPacket p) {
 		// all packets sent locally are counted as sent and forwarded
-		if (p == null) {
-			System.err.println("send: no packet to send");
-			System.exit(-1);
-		}
-		if (p.getSource() != node_id) {
-			System.err.println("send: can only send local originated packets");
-			System.exit(-1);
-		}
-		if (p.getType() != PacketType.DATA) {
-			System.err.println("send: can only send data packets");
-			System.exit(-1);
-		}
-		// counter[SENT] will be incremented when the packet is sent by the forwarding process
+		if (p == null) down_call_panic("send: no packet to send");
+		if (p.getSource() != node_id) down_call_panic("send: can only send local originated packets");
+		if (p.getType() != PacketType.DATA) down_call_panic("send: can only send data packets");
+		// counter[SENT] will be incremented after the packet is forwarded
 		counter[FORW]++;
 		control_alg.forward_packet(now, p, LOCAL);
 		
@@ -350,12 +390,9 @@ public class Node {
 	 * @param iface the interface
 	 */
 	public void send(Packet p, int iface) {
-		if (p == null) {
-			System.err.println("control_send: no packet to send");
-			System.exit(-1);
-		}
+		if (p == null) down_call_panic("control_send: no packet to send");
 		if (iface == UNKNOWN || iface >= num_interfaces) {
-			// increase counters and drop the packet since it is impossible to send it
+			// increase drop counter and drop the packet since it is impossible to send it
 			counter[DROP]++;
 		}
 		else if (p.getDestination() == node_id) {
@@ -370,36 +407,27 @@ public class Node {
 		}
 	}
 
-	
 
 	/**
 	 * Installs an application timeout. The reception of a data message before or at
-	 * now+t cancels all application timeouts (including those to be delivered in
-	 * the same time step)
+	 * now+t cancels all application timeouts (including those to be delivered in the same time step)
 	 * 
 	 * @param t the timeout value
 	 */
 	public void set_timeout(int t) {
-		if (t < 1) {
-			System.err.println("set_app_timeout: timeout value must be >= 1");
-			System.exit(-1);
-		}
+		if (t < 1) down_call_panic("set_app_timeout: timeout value must be >= 1");
 		next_app_timeout = now + t; // next expected control timeout
 		outputEvents.add(new Event(EventType.CLOCK_INTERRUPT, next_app_timeout, 0, null, null, node_id, 0));
 	}
 
 	/**
-	 * Installs a control timeout The reception of a data message before or at now+t
-	 * cancels all control timeouts (including those to be delivered in the same
-	 * time step)
+	 * Installs a control timeout. The reception of a data message before or at now+t
+	 * cancels all control timeouts (including those to be delivered in the same time step)
 	 * 
 	 * @param t the timeout value
 	 */
 	public void set_control_timeout(int t) {
-		if (t < 1) {
-			System.err.println("set_control_timeout: timeout value must be >= 1");
-			System.exit(-1);
-		}
+		if (t < 1) down_call_panic("set_control_timeout: timeout value must be >= 1");
 		next_control_timeout = now + t; // next expected app timeout
 		outputEvents.add(new Event(EventType.CLOCK_INTERRUPT, next_control_timeout, 0, null, null, node_id, 0));
 	}
@@ -438,7 +466,7 @@ public class Node {
 	}
 
 	/**
-	 * Returns the interface state for the specified interface, is it up or down.
+	 * Returns the interface state for the specified interface - is it up or down?
 	 * 
 	 * @param iface
 	 * @return boolean (true if is Up)
@@ -446,10 +474,35 @@ public class Node {
 	public boolean getInterfaceState(int iface) {
 		// If the interface value is -1 (LOCAL), it is the virtual loop back interface, so
 		// it is always up.
-		if (iface == LOCAL) {
-			return true;
-		}
+		if (iface == LOCAL) return true;
 		return links[iface].isUp();
+	}
+	
+	
+	/***************************************************************************
+	 * 
+	 * Auxiliary method for impossible to proceed situations
+	 * 
+	 ***************************************************************************/
+
+	/**
+	 * Aborts the execution in a situation of panic
+	 * 
+	 * @param message to be printed before Simulator panic abortion
+	 */
+	private void panic (String message) {
+		System.err.println("system panic situation: "+message);
+		System.exit(-1);
+	}
+	
+	/**
+	 * Aborts the execution in a situation of panic
+	 * 
+	 * @param message to be printed before Simulator panic abortion
+	 */
+	private void down_call_panic (String message) {
+		System.err.println("down call bad usage panic situation: "+message);
+		System.exit(-1);
 	}
 
 }

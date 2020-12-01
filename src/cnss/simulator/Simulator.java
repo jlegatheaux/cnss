@@ -99,7 +99,7 @@ public class Simulator {
 			String str;
 			int i = 0;
 			while ((str = input.readLine()) != null) {
-				// System.err.print(i+", ");
+				// System.err.println(i+" "+str);
 				process_config_line(str);
 				i++;
 			}
@@ -141,6 +141,8 @@ public class Simulator {
 	 */
 	private void process_config_line(String s) {
 		String[] result = s.split("\\s");
+		
+		// System.err.println("first arguments:"+result[0]);
 
 		if (result.length == 1) return;
 
@@ -157,7 +159,7 @@ public class Simulator {
 				System.err.println("config line - parameter with wrong number of arguments:"+s);
 				System.exit(-1);
 			}
-		}
+		} // parameter
 
 		else if (result[0].equalsIgnoreCase("node")) {
 			String[] args = new String[result.length - 5];
@@ -167,7 +169,7 @@ public class Simulator {
 			// result[1] = node id, result[2] = # interfaces, result[3] = control class name,
 			// result[4] = app class name result[5] = args[0] .....
 			tmp_nodes.add(nd);
-		}
+		} // node
 
 		else if (result[0].equalsIgnoreCase("link")) {
 			Link l = new Link(Integer.parseInt(result[1].split("\\.")[0]), Integer.parseInt(result[1].split("\\.")[1]),
@@ -184,7 +186,7 @@ public class Simulator {
 				}
 			}
 			tmp_links.add(l);
-		}
+		} // link
 
 		// in all the following events, their packet, node and interface parameters are not used
 
@@ -197,7 +199,9 @@ public class Simulator {
 				args[i] = result[i + 2];
 			}
 			createMainQueueEvent(EventType.TRACEROUTE, Integer.parseInt(result[1]), args);
-		} else if (result[0].equalsIgnoreCase("uplink") || result[0].equalsIgnoreCase("downlink") ||
+		} // trace 
+		
+		else if (result[0].equalsIgnoreCase("uplink") || result[0].equalsIgnoreCase("downlink") ||
 				   result[0].equalsIgnoreCase("up_link") || result[0].equalsIgnoreCase("down_link")) {
 			int arg_len = result.length;
 
@@ -210,33 +214,45 @@ public class Simulator {
 				createMainQueueEvent(EventType.UPLINK, Integer.parseInt(result[1]), args);
 			} else
 				createMainQueueEvent(EventType.DOWNLINK, Integer.parseInt(result[1]), args);
-		} else if (result[0].equalsIgnoreCase("dumproutes") ||
+		} // up down
+		
+		else if (result[0].equalsIgnoreCase("dumproutes") ||
 				   result[0].equalsIgnoreCase("dump_routes")) {
 			// result[1] = time, result[2] = all or node id
 			String[] args = new String[1];
 			args[0] = result[2];
 			createMainQueueEvent(EventType.DUMP_RT, Integer.parseInt(result[1]), args);
-		} else if (result[0].equalsIgnoreCase("dumpcontrolstate") ||
+		} // dump routes
+		
+		else if (result[0].equalsIgnoreCase("dumpcontrolstate") ||
 				   result[0].equalsIgnoreCase("dump_control_state")) {
 			// result[1] = time, result[2] = all or node id
 			String[] args = new String[1];
 			args[0] = result[2];
 			createMainQueueEvent(EventType.DUMP_CONTROLSTATE, Integer.parseInt(result[1]), args);
-		} else if (result[0].equalsIgnoreCase("dumpappstate") ||
+		} // control state 
+		
+		else if (result[0].equalsIgnoreCase("dumpappstate") ||
 				   result[0].equalsIgnoreCase("dump_app_state")) {
 			// result[1] = time, result[2] = all or node id
 			String[] args = new String[1];
 			args[0] = result[2];
 			createMainQueueEvent(EventType.DUMP_APPSTATE, Integer.parseInt(result[1]), args);
-		} else if (result[0].equalsIgnoreCase("dumppacketstats") ||
+		} // app state
+		
+		else if (result[0].equalsIgnoreCase("dumppacketstats") ||
 				   result[0].equalsIgnoreCase("dump_packet_stats") ) {
 			// result[1] = time, result[2] = all or node id
 			String[] args = new String[1];
 			args[0] = result[2];
 			createMainQueueEvent(EventType.DUMP_PACKETS, Integer.parseInt(result[1]), args);
-		} else if (result[0].startsWith("#")) {
+		} // dump stats
+		
+		else if (result[0].startsWith("#")) {
 			// skipping comments
-		} else {
+		} 
+		
+		else {
 			System.err.println("config line - wrong config line:"+s);
 			System.exit(-1);
 		}
