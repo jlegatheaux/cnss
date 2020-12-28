@@ -1,5 +1,7 @@
 package cnss.simulator;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * The <code>Packet</code> class models a network packet.
  */
@@ -175,7 +177,7 @@ public class Packet {
 		String s;
 		s = "src " + src + " dst " + dst + " type " + type + " ttl " + ttl + " seq " + seq + " size " + size;
 		if (type == PacketType.TRACING) {
-			s = s + " path " + payload.toString();
+			s = s + " path " + new String(payload, StandardCharsets.UTF_8);;
 		}
 		return s;
 	}

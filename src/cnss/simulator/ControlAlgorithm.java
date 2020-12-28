@@ -71,8 +71,9 @@ public interface ControlAlgorithm {
 
 	/**
 	 * Given a packet from another node, forward it to the appropriate interfaces
-	 * using nodeObj.control_send(Packet p, int iface) Packet ttl has already been
-	 * decreased
+	 * using nodeObj.send(Packet p, int iface); Packet ttl has already been
+	 * decreased and controlled. If the algorithm has no solution to route this packet,
+	 * send it to the UNKNOWN interface using nodeObj.send(p,UNKNOWN)
 	 * 
 	 * @param now   the current virtual clock value
 	 * @param p     the packet to process

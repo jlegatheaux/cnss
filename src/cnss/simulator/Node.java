@@ -34,6 +34,7 @@ public class Node {
 	private ControlAlgorithm control_alg;
 	private ApplicationAlgorithm app_alg;
 	private String[] args;
+	private boolean traceForwarding;
 
 	// Events and global variables
 	private Queue<Event> inputEvents = new LinkedList<>();
@@ -134,6 +135,7 @@ public class Node {
 			next_app_clock_tick = app_clock_tick_period;
 			outputEvents.add(new Event(EventType.CLOCK_INTERRUPT, next_app_clock_tick, 0, null, null, node_id, 0));
 		}
+		traceForwarding = parameters.containsKey("trace_forwarding");
 	}
 
 	/**
@@ -394,6 +396,8 @@ public class Node {
 		if (iface == UNKNOWN || iface >= num_interfaces) {
 			// increase drop counter and drop the packet since it is impossible to send it
 			counter[DROP]++;
+			if ( traceForwarding ) System.out.println("node "+node_id+" time "+now+" packet sent to UNKNOWN "+p);
+			
 		}
 		else if (p.getDestination() == node_id) {
 			// locally forwarded or sent directly to the node itself
@@ -404,6 +408,7 @@ public class Node {
 		else {
 			links[iface].enqueuePacket(node_id, p); // the link side is relative to the node calling it
 			counter[SENT]++;
+			if ( traceForwarding ) System.out.println("node "+node_id+" time "+now+" forwarded packet "+p);
 		}
 	}
 
